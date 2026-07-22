@@ -1,0 +1,22 @@
+package com.example.prj_exprho.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CategoryUpdateRequest {
+    @NotBlank(message = "Tên danh mục không được để trống")
+    @Size(max = 100, message = "Tên danh mục không được quá 100 ký tự")
+    private String name;
+
+    @Size(max = 255, message = "Mô tả không được quá 255 ký tự")
+    private String description;
+
+    @NotBlank(message = "Trạng thái không được để trống")
+    private String status; // ACTIVE, INACTIVE
+}
