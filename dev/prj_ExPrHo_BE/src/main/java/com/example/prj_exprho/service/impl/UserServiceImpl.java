@@ -199,6 +199,35 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    public void updateEmployee(Long id, EmployeeUpdateRequest request, HttpServletRequest servletRequest) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiException("ERR_AUTH_04", "Nhân viên không tồn tại."));
+
+        if ("DELETED".equalsIgnoreCase(user.getStatus())) {
+            throw new ApiException("ERR_AUTH_04", "Nhân viên không tồn tại.");
+        }
+
+        // Validate uniqueness of Email
+        Optional<User> emailUserOpt = userRepository.findByEmail(request.getEmail());
+        if (emailUserOpt.isPresent() && !emailUserOpt.get().getId().equals(id)) {
+            throw new ApiException("ERR_VAL_02", "Email đã tồn tại trong hệ thống.");
+        }
+
+        Role role = roleRepository.findByRoleName(request.getRole().toUpperCase())
+                .orElseThrow(() -> new ApiException("ERR_VAL_05", "Vai trò không hợp lệ."));
+
+        user.setFullName(request.getFullName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setRoles(new HashSet<>(Collections.singletonList(role)));
+        userRepository.save(user);
+
+        String adminUsername = servletRequest.getUserPrincipal() != null ? servletRequest.getUserPrincipal().getName() : "SYSTEM";
+        actionLogService.logAction(adminUsername, "Cập nhật thông tin nhân viên: " + user.getUsername(), servletRequest);
+    }
+
+    @Override
+    @Transactional
     public void updateEmployeeRole(Long id, String roleName, HttpServletRequest servletRequest) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ApiException("ERR_AUTH_04", "Nhân viên không tồn tại."));

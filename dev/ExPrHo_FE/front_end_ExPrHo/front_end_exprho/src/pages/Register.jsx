@@ -68,6 +68,7 @@ const Register = () => {
         email: email.trim(),
         phone: phoneNumber.trim(),
         password: password,
+        confirmPassword: confirmPassword,
       });
 
       showToast('Đăng ký thành công', 'Bạn có thể đăng nhập ngay bây giờ!', 'success');

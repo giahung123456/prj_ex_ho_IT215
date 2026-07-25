@@ -50,6 +50,18 @@ public class EmployeeController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/employees/{id}")
+    public ResponseEntity<Map<String, String>> updateEmployee(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody EmployeeUpdateRequest request,
+            HttpServletRequest servletRequest) {
+        userService.updateEmployee(id, request, servletRequest);
+        Map<String, String> response = new HashMap<>();
+        response.put("code", "MSG_SUCCESS_04");
+        response.put("message", "Cập nhật thông tin nhân viên thành công.");
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/employees/{id}/role")
     public ResponseEntity<Map<String, String>> updateEmployeeRole(
             @PathVariable("id") Long id,

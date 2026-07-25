@@ -13,6 +13,7 @@ public interface UserService {
     // CRUD Employee (Admin only)
     Page<EmployeeResponse> getEmployees(String search, String role, String status, Pageable pageable);
     void createEmployee(EmployeeCreateRequest request, HttpServletRequest servletRequest);
+    void updateEmployee(Long id, EmployeeUpdateRequest request, HttpServletRequest servletRequest);
     void updateEmployeeRole(Long id, String roleName, HttpServletRequest servletRequest);
     void toggleEmployeeStatus(Long id, HttpServletRequest servletRequest);
 }
