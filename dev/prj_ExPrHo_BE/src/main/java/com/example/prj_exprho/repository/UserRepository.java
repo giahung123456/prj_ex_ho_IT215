@@ -16,6 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsernameOrEmail(String username, String email);
 
     @Query("SELECT DISTINCT u FROM User u LEFT JOIN u.roles r WHERE " +
+           "u.username != :excludeUsername AND " +
            "(:search IS NULL OR LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            " LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
            " LOWER(u.fullName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
@@ -26,5 +27,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> searchEmployees(@Param("search") String search,
                                @Param("role") String role,
                                @Param("status") String status,
+                               @Param("excludeUsername") String excludeUsername,
                                Pageable pageable);
 }

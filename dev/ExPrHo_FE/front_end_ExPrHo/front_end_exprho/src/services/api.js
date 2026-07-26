@@ -668,6 +668,12 @@ export const employeeService = {
     // Filters: Filter out customers, show only employees (ADMIN, STOREKEEPER, SALES)
     users = users.filter((u) => u.role !== 'CUSTOMER');
 
+    // Filter out currently logged in employee
+    const cachedUser = JSON.parse(localStorage.getItem('auth_user') || '{}');
+    if (cachedUser && cachedUser.username) {
+      users = users.filter((u) => u.username !== cachedUser.username);
+    }
+
     // Search query
     if (filters.search) {
       const query = filters.search.toLowerCase();
@@ -1373,11 +1379,32 @@ export const stockLogService = {
    CUSTOMER CART SERVICES
    ========================================== */
 
+const normalizeCart = (backendCart) => {
+  if (!backendCart) return null;
+  return {
+    id: backendCart.id,
+    customerId: backendCart.customerId,
+    totalPrice: backendCart.totalAmount || 0,
+    items: (backendCart.items || []).map(item => ({
+      id: item.id,
+      quantity: item.quantity,
+      subTotal: item.itemTotal || 0,
+      product: {
+        id: item.productId,
+        sku: item.productSku || '',
+        name: item.productName || '',
+        price: item.productPrice || 0,
+        categoryName: ''
+      }
+    }))
+  };
+};
+
 export const cartService = {
   get: async () => {
     if (!USE_MOCK) {
       const response = await api.get('/cart');
-      return response.data;
+      return normalizeCart(response.data);
     }
 
     await delay(300);
@@ -1399,7 +1426,7 @@ export const cartService = {
   addItem: async (payload) => {
     if (!USE_MOCK) {
       const response = await api.post('/cart/items', payload);
-      return response.data;
+      return normalizeCart(response.data.cart);
     }
 
     await delay(400);
@@ -1462,7 +1489,7 @@ export const cartService = {
   updateQuantity: async (itemId, payload) => {
     if (!USE_MOCK) {
       const response = await api.put(`/cart/items/${itemId}`, payload);
-      return response.data;
+      return normalizeCart(response.data.cart);
     }
 
     await delay(300);
@@ -1505,7 +1532,7 @@ export const cartService = {
   removeItem: async (itemId) => {
     if (!USE_MOCK) {
       const response = await api.delete(`/cart/items/${itemId}`);
-      return response.data;
+      return normalizeCart(response.data.cart);
     }
 
     await delay(300);
@@ -1544,14 +1571,37 @@ export const cartService = {
   }
 };
 
-/* ==========================================
-   CUSTOMER ORDER & CHECKOUT SERVICES
-   ========================================== */
+const normalizeOrder = (backendOrder) => {
+  if (!backendOrder) return null;
+  return {
+    id: backendOrder.id,
+    orderCode: backendOrder.orderCode,
+    username: backendOrder.username,
+    shippingAddress: backendOrder.shippingAddress,
+    shippingPhone: backendOrder.shippingPhone,
+    totalAmount: backendOrder.totalAmount,
+    status: backendOrder.status,
+    createdAt: backendOrder.createdAt,
+    updatedAt: backendOrder.updatedAt,
+    orderItems: (backendOrder.items || []).map(item => ({
+      id: item.id,
+      productId: item.productId,
+      productSku: item.productSku || '',
+      productName: item.productName || '',
+      price: item.productPrice || 0,
+      quantity: item.quantity || 0,
+      subTotal: item.itemTotal || 0
+    }))
+  };
+};
 
 export const orderService = {
   checkout: async (payload) => {
     if (!USE_MOCK) {
       const response = await api.post('/orders/checkout', payload);
+      if (response.data && response.data.order) {
+        response.data.order = normalizeOrder(response.data.order);
+      }
       return response.data;
     }
 
@@ -1648,6 +1698,9 @@ export const orderService = {
   getMyOrders: async (params = {}) => {
     if (!USE_MOCK) {
       const response = await api.get('/orders', { params });
+      if (response.data && response.data.content) {
+        response.data.content = response.data.content.map(normalizeOrder);
+      }
       return response.data;
     }
 
@@ -1675,6 +1728,9 @@ export const orderService = {
   getAll: async (params = {}) => {
     if (!USE_MOCK) {
       const response = await api.get('/orders/admin', { params });
+      if (response.data && response.data.content) {
+        response.data.content = response.data.content.map(normalizeOrder);
+      }
       return response.data;
     }
 
@@ -1698,6 +1754,9 @@ export const orderService = {
   updateStatus: async (id, payload) => {
     if (!USE_MOCK) {
       const response = await api.put(`/orders/${id}/status`, payload);
+      if (response.data && response.data.order) {
+        response.data.order = normalizeOrder(response.data.order);
+      }
       return response.data;
     }
 

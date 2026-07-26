@@ -198,7 +198,7 @@ const StockLogs = () => {
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>@{log.createdByUsername}</span>
                         </div>
                       </td>
-                      <td style={{ color: 'var(--text-secondary)', maxWidth: '250px', wordBreak: 'break-word' }}>{log.reason}</td>
+                      <td style={{ color: 'var(--text-secondary)', maxWidth: '250px', wordBreak: 'break-word', whiteSpace: 'normal' }}>{log.reason}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,7 +140,9 @@ public class UserServiceImpl implements UserService {
         String roleParam = (role == null || role.trim().isEmpty()) ? null : role.trim();
         String statusParam = (status == null || status.trim().isEmpty()) ? null : status.trim();
 
-        return userRepository.searchEmployees(searchParam, roleParam, statusParam, pageable)
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return userRepository.searchEmployees(searchParam, roleParam, statusParam, currentUsername, pageable)
                 .map(user -> EmployeeResponse.builder()
                         .id(String.valueOf(user.getId()))
                         .username(user.getUsername())

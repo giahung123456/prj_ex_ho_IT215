@@ -67,6 +67,10 @@ const ProductManagement = () => {
     reason: ''
   });
 
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [base64Image, setBase64Image] = useState(null);
+
   const [formErrors, setFormErrors] = useState({});
 
   // Load Categories & Products
@@ -137,6 +141,8 @@ const ProductManagement = () => {
       status: 'ACTIVE'
     });
     setFormErrors({});
+    setImagePreview(null);
+    setBase64Image(null);
     setShowProductModal(true);
   };
 
@@ -154,7 +160,49 @@ const ProductManagement = () => {
       status: product.status
     });
     setFormErrors({});
+    
+    // Load saved image from localStorage
+    const savedImg = localStorage.getItem(`product_image_${product.sku}`);
+    if (savedImg) {
+      setImagePreview(savedImg);
+      setBase64Image(savedImg);
+    } else {
+      setImagePreview(null);
+      setBase64Image(null);
+    }
+    
     setShowProductModal(true);
+  };
+
+  // Open read-only details modal
+  const handleOpenDetails = (product) => {
+    setSelectedProduct(product);
+    setShowDetailsModal(true);
+  };
+
+  // Handle image upload change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Ảnh quá lớn', 'Kích thước ảnh tối đa là 2MB', 'warning');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        setBase64Image(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Clear image input
+  const handleClearImage = () => {
+    setImagePreview(null);
+    setBase64Image(null);
+    const fileInput = document.getElementById('productImage');
+    if (fileInput) fileInput.value = '';
   };
 
   // Open stock adjustment modal
@@ -197,8 +245,14 @@ const ProductManagement = () => {
     if (!validateProductForm()) return;
 
     try {
+      let finalSku = productForm.sku.trim();
+      if (!finalSku) {
+        finalSku = `PROD-${Date.now().toString().slice(-6)}`;
+      }
+      finalSku = finalSku.toUpperCase();
+
       const payload = {
-        sku: productForm.sku,
+        sku: finalSku,
         name: productForm.name,
         description: productForm.description,
         price: Number(productForm.price),
@@ -214,6 +268,13 @@ const ProductManagement = () => {
       } else {
         await productService.create(payload);
         showToast('Thành công', 'Đã thêm mới sản phẩm và tạo tồn ban đầu.', 'success');
+      }
+
+      // Save/remove image from localStorage
+      if (base64Image) {
+        localStorage.setItem(`product_image_${finalSku}`, base64Image);
+      } else {
+        localStorage.removeItem(`product_image_${finalSku}`);
       }
 
       setShowProductModal(false);
@@ -262,6 +323,47 @@ const ProductManagement = () => {
     }
   };
 
+  const getProductImagePlaceholder = (id, catName) => {
+    const gradients = [
+      'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+      'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+      'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)',
+      'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+      'linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%)',
+      'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)'
+    ];
+    const grad = gradients[(id || 0) % gradients.length];
+    return (
+      <div 
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          background: grad, 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center', 
+          justifyContent: 'center',
+          color: 'rgba(255,255,255,0.85)',
+          padding: '1rem',
+          textAlign: 'center',
+          minHeight: '120px'
+        }}
+      >
+        <span style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', opacity: 0.8 }}>
+          {catName}
+        </span>
+      </div>
+    );
+  };
+
+  const getProductImage = (sku, id, catName) => {
+    const localImg = localStorage.getItem(`product_image_${sku}`);
+    if (localImg) {
+      return <img src={localImg} alt="Product" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
+    }
+    return getProductImagePlaceholder(id, catName);
+  };
+
   const formatPrice = (price) => {
     if (price === undefined || price === null) return '-';
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -287,7 +389,7 @@ const ProductManagement = () => {
             <span>Bộ lọc tra cứu sản phẩm</span>
           </h3>
           {isStaffPrivileged && (
-            <button onClick={handleOpenCreate} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <button onClick={handleOpenCreate} className="btn btn-primary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', width: 'auto' }}>
               <Plus size={16} />
               <span>Thêm Sản Phẩm Mới</span>
             </button>
@@ -388,7 +490,7 @@ const ProductManagement = () => {
                     {isStaffPrivileged && <th style={{ textAlign: 'right' }}>Giá Vốn</th>}
                     <th style={{ textAlign: 'center' }}>Tồn kho</th>
                     <th style={{ textAlign: 'center' }}>Trạng thái</th>
-                    {isStaffPrivileged && <th style={{ textAlign: 'center', width: '220px' }}>Hành động</th>}
+                    <th style={{ textAlign: 'center', width: '260px' }}>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -406,30 +508,41 @@ const ProductManagement = () => {
                         </span>
                       </td>
                       <td style={{ textAlign: 'center' }}>{getStatusBadge(p.status)}</td>
-                      {isStaffPrivileged && (
-                        <td style={{ textAlign: 'center' }}>
-                          <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
-                            <button 
-                              onClick={() => handleOpenEdit(p)} 
-                              className="btn btn-secondary" 
-                              style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                              title="Sửa thông tin sản phẩm"
-                            >
-                              <Edit3 size={12} />
-                              <span>Sửa</span>
-                            </button>
-                            <button 
-                              onClick={() => handleOpenAdjust(p)} 
-                              className="btn btn-primary" 
-                              style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                              title="Điều chỉnh số lượng kho hàng"
-                            >
-                              <Sliders size={12} />
-                              <span>Kiểm kho</span>
-                            </button>
-                          </div>
-                        </td>
-                      )}
+                      <td style={{ textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center' }}>
+                          <button 
+                            onClick={() => handleOpenDetails(p)} 
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                            title="Xem chi tiết sản phẩm"
+                          >
+                            <Eye size={12} />
+                            <span>Chi tiết</span>
+                          </button>
+                          {isStaffPrivileged && (
+                            <>
+                              <button 
+                                onClick={() => handleOpenEdit(p)} 
+                                className="btn btn-secondary" 
+                                style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                                title="Sửa thông tin sản phẩm"
+                              >
+                                <Edit3 size={12} />
+                                <span>Sửa</span>
+                              </button>
+                              <button 
+                                onClick={() => handleOpenAdjust(p)} 
+                                className="btn btn-primary" 
+                                style={{ padding: '0.35rem 0.6rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                                title="Điều chỉnh số lượng kho hàng"
+                              >
+                                <Sliders size={12} />
+                                <span>Kiểm kho</span>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -608,6 +721,26 @@ const ProductManagement = () => {
                   </div>
                 </div>
 
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" htmlFor="productImage">Ảnh sản phẩm (File Upload)</label>
+                  <input 
+                    type="file" 
+                    id="productImage" 
+                    className="form-input" 
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ padding: '0.35rem' }}
+                  />
+                  {imagePreview && (
+                    <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <img src={imagePreview} alt="Preview" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
+                      <button type="button" className="btn btn-secondary text-danger" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderColor: 'rgba(239, 68, 68, 0.2)' }} onClick={handleClearImage}>
+                        Xóa ảnh
+                      </button>
+                    </div>
+                  )}
+                </div>
+
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowProductModal(false)}>Hủy</button>
@@ -776,6 +909,102 @@ const ProductManagement = () => {
                 <button type="submit" className="btn btn-primary">Xác nhận điều chỉnh</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: PRODUCT DETAILS (XEM CHI TIẾT) */}
+      {showDetailsModal && selectedProduct && (
+        <div className="modal-backdrop">
+          <div className="modal-card" style={{ maxWidth: '600px', width: '90%' }}>
+            <div className="modal-header">
+              <h3 className="modal-title">Thông Tin Chi Tiết Sản Phẩm</h3>
+              <button className="modal-close" onClick={() => setShowDetailsModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              
+              {/* Product preview and core info */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: '1.25rem' }}>
+                <div style={{ aspectRatio: '1', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {getProductImage(selectedProduct.sku, selectedProduct.id, selectedProduct.categoryName)}
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.05em' }}>
+                      {selectedProduct.categoryName}
+                    </span>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0.2rem 0 0.5rem 0', color: 'var(--text-main)' }}>
+                      {selectedProduct.name}
+                    </h2>
+                    <span style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: 'var(--text-muted)', display: 'block', marginBottom: '0.75rem' }}>
+                      Mã SKU: {selectedProduct.sku}
+                    </span>
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                      <div>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Giá bán lẻ:</span>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--primary)' }}>
+                          {formatPrice(selectedProduct.price)}
+                        </div>
+                      </div>
+                      
+                      {/* Hide costPrice from Sales role */}
+                      {isStaffPrivileged && selectedProduct.costPrice !== undefined && (
+                        <div>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Giá vốn nhập:</span>
+                          <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-secondary)' }}>
+                            {formatPrice(selectedProduct.costPrice)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats & Metadata table */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', backgroundColor: 'var(--surface-hover)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-md)' }}>
+                <div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Số lượng tồn kho:</span>
+                  <div style={{ fontSize: '1rem', fontWeight: 700 }}>{selectedProduct.stockQuantity} sản phẩm</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Trạng thái bán:</span>
+                  <div style={{ marginTop: '0.15rem' }}>{getStatusBadge(selectedProduct.status)}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Ngày tạo:</span>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                    {selectedProduct.createdAt ? new Date(selectedProduct.createdAt).toLocaleString('vi-VN') : '-'}
+                  </div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Cập nhật cuối:</span>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                    {selectedProduct.updatedAt ? new Date(selectedProduct.updatedAt).toLocaleString('vi-VN') : '-'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.35rem' }}>Mô tả chi tiết</h4>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, backgroundColor: 'var(--background)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', margin: 0, whiteSpace: 'pre-line' }}>
+                  {selectedProduct.description || 'Chưa có thông tin mô tả chi tiết cho sản phẩm này.'}
+                </p>
+              </div>
+
+            </div>
+            
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setShowDetailsModal(false)}>Đóng</button>
+            </div>
           </div>
         </div>
       )}

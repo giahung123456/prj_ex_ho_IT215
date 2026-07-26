@@ -25,7 +25,7 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'STOREKEEPER', 'SALES')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STOREKEEPER', 'SALES', 'CUSTOMER')")
     public ResponseEntity<Page<CategoryResponse>> getCategories(
             @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "status", required = false) String status,

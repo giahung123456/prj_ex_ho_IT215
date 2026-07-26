@@ -35,6 +35,7 @@ const DashboardOverview = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchDashboardData = async () => {
+    if (currentUser?.role === 'CUSTOMER') return;
     setIsLoading(true);
     try {
       // 1. Fetch products stats
@@ -146,7 +147,18 @@ const DashboardOverview = () => {
         <button 
           onClick={fetchDashboardData} 
           className="btn btn-secondary" 
-          style={{ marginLeft: 'auto', padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ 
+            marginLeft: 'auto', 
+            padding: 0, 
+            borderRadius: '50%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            width: '36px',
+            height: '36px',
+            minWidth: '36px',
+            flexShrink: 0
+          }}
           title="Làm mới dữ liệu"
           disabled={isLoading}
         >

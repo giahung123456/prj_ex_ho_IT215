@@ -142,7 +142,7 @@ const Storefront = () => {
       'linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%)',
       'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)'
     ];
-    const grad = gradients[id % gradients.length];
+    const grad = gradients[(id || 0) % gradients.length];
     return (
       <div 
         style={{ 
@@ -164,6 +164,14 @@ const Storefront = () => {
         </span>
       </div>
     );
+  };
+
+  const getProductImage = (sku, id, catName) => {
+    const localImg = localStorage.getItem(`product_image_${sku}`);
+    if (localImg) {
+      return <img src={localImg} alt="Product" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
+    }
+    return getProductImagePlaceholder(id, catName);
   };
 
   return (
@@ -255,7 +263,7 @@ const Storefront = () => {
               return (
                 <div key={p.id} className="product-card-retail">
                   <div className="product-card-img-wrapper">
-                    {getProductImagePlaceholder(p.id, p.categoryName)}
+                    {getProductImage(p.sku, p.id, p.categoryName)}
                     <span className="product-card-badge">
                       {isOutOfStock ? (
                         <span className="badge badge-customer">HẾT HÀNG</span>
@@ -355,8 +363,8 @@ const Storefront = () => {
               
               {/* Product preview and core info */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: '1.25rem' }}>
-                <div style={{ aspectRatio: '1', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border)' }}>
-                  {getProductImagePlaceholder(selectedProduct.id, selectedProduct.categoryName)}
+                <div style={{ aspectRatio: '1', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {getProductImage(selectedProduct.sku, selectedProduct.id, selectedProduct.categoryName)}
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>

@@ -109,7 +109,7 @@ const Cart = () => {
     <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-        <button onClick={() => navigate('/')} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <button onClick={() => navigate('/')} className="btn btn-secondary btn-sm" style={{ padding: '0.4rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem', width: 'auto' }}>
           <ArrowLeft size={16} />
           <span>Quay lại cửa hàng</span>
         </button>
@@ -217,8 +217,8 @@ const Cart = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
               <button 
                 onClick={handleClearCart} 
-                className="btn btn-secondary text-danger" 
-                style={{ borderColor: 'rgba(239, 68, 68, 0.2)' }}
+                className="btn btn-secondary text-danger btn-sm" 
+                style={{ borderColor: 'rgba(239, 68, 68, 0.2)', width: 'auto' }}
               >
                 Xóa sạch giỏ hàng
               </button>
