@@ -15,6 +15,17 @@ const OrderHistory = () => {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => setShowOverlay(true), 250);
+    } else {
+      setShowOverlay(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Active details modal order
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -82,19 +93,39 @@ const OrderHistory = () => {
       </div>
 
       {/* Orders List Card */}
-      <div className="card">
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <span className="text-secondary">Đang tải lịch sử mua hàng của bạn...</span>
+      <div className="card" style={{ position: 'relative', minHeight: '300px' }}>
+        {showOverlay && orders.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(255, 255, 255, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+            backdropFilter: 'blur(1px)',
+            transition: 'opacity 0.2s ease',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ display: 'inline-block', width: '32px', height: '32px', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Đang cập nhật danh sách...</span>
+            </div>
+          </div>
+        )}
+
+        {showOverlay && orders.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '5rem 0' }}>
+            <div style={{ display: 'inline-block', width: '32px', height: '32px', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1rem' }} />
+            <div><span className="text-secondary" style={{ fontWeight: 500 }}>Đang tải lịch sử mua hàng của bạn...</span></div>
           </div>
         ) : orders.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+          <div style={{ textAlign: 'center', padding: '5rem 0' }}>
             <AlertCircle size={44} className="text-muted" style={{ marginBottom: '1rem' }} />
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.35rem' }}>Bạn chưa đặt đơn hàng nào!</h3>
             <p style={{ color: 'var(--text-secondary)' }}>Hãy ghé qua danh mục sản phẩm và lựa chọn những sản phẩm ưng ý nhé.</p>
           </div>
         ) : (
-          <>
+          <div style={{ opacity: showOverlay ? 0.6 : 1, pointerEvents: showOverlay ? 'none' : 'auto', transition: 'opacity 0.2s ease' }}>
             <div className="table-responsive">
               <table className="table">
                 <thead>
@@ -169,7 +200,7 @@ const OrderHistory = () => {
                 </button>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 

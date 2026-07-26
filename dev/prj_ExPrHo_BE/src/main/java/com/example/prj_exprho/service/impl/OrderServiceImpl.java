@@ -44,6 +44,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private StockLogRepository stockLogRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private static final List<String> VALID_STATUSES = Arrays.asList(
             "PENDING", "CONFIRMED", "SHIPPING", "COMPLETED", "CANCELLED"
     );
@@ -86,7 +89,6 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         Order savedOrder = orderRepository.save(order);
-        List<OrderItem> orderItems = new ArrayList<>();
 
         // Process each cart item with pessimistic write lock on Product
         for (CartItem item : cartItems) {
@@ -110,7 +112,8 @@ public class OrderServiceImpl implements OrderService {
                     .quantity(item.getQuantity())
                     .price(itemPrice)
                     .build();
-            orderItems.add(orderItemRepository.save(orderItem));
+            OrderItem savedItem = orderItemRepository.save(orderItem);
+            savedOrder.getItems().add(savedItem);
 
             // Update product stock quantity
             int newStock = product.getStockQuantity() - item.getQuantity();
@@ -133,7 +136,6 @@ public class OrderServiceImpl implements OrderService {
 
         // Update total amount on order
         savedOrder.setTotalAmount(totalAmount);
-        savedOrder.setItems(orderItems);
         Order finalOrder = orderRepository.save(savedOrder);
 
         // Clear customer cart after successful checkout
@@ -177,6 +179,23 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new ApiException("ERR_VAL_05", "Đơn hàng không tồn tại."));
 
         order.setStatus(newStatus);
+
+        // Associate current logged in staff user as the sales person for this order
+        try {
+            org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getName() != null) {
+                userRepository.findByUsername(auth.getName()).ifPresent(user -> {
+                    boolean isStaff = user.getRoles().stream()
+                            .anyMatch(r -> "SALES".equalsIgnoreCase(r.getRoleName()) || "ADMIN".equalsIgnoreCase(r.getRoleName()));
+                    if (isStaff) {
+                        order.setSales(user);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+
         Order updatedOrder = orderRepository.save(order);
         return mapToResponse(updatedOrder);
     }
@@ -227,6 +246,7 @@ public class OrderServiceImpl implements OrderService {
                 .shippingPhone(order.getShippingPhone())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
+                .salesUsername(order.getSales() != null ? order.getSales().getUsername() : null)
                 .items(itemResponses)
                 .build();
     }

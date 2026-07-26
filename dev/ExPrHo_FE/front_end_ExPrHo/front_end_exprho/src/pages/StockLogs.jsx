@@ -14,6 +14,17 @@ const StockLogs = () => {
 
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => setShowOverlay(true), 250);
+    } else {
+      setShowOverlay(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -24,6 +35,9 @@ const StockLogs = () => {
     page: 0,
     size: 10
   });
+
+  // Local input state for debouncing
+  const [searchInput, setSearchInput] = useState(filters.search);
 
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
@@ -47,13 +61,37 @@ const StockLogs = () => {
     loadStockLogs();
   }, [filters]);
 
+  // Sync local input state with filters state (e.g. when filters are cleared)
+  useEffect(() => {
+    setSearchInput(filters.search);
+  }, [filters.search]);
+
+  // Debounce API calls for text search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== filters.search) {
+        setFilters(prev => ({
+          ...prev,
+          search: searchInput,
+          page: 0
+        }));
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchInput, filters.search]);
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value,
-      page: 0
-    }));
+    if (name === 'search') {
+      setSearchInput(value);
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        [name]: value,
+        page: 0
+      }));
+    }
   };
 
   const handleClearFilters = () => {
@@ -100,7 +138,7 @@ const StockLogs = () => {
               name="search"
               className="form-input" 
               placeholder="Tìm theo SKU, tên sản phẩm, lý do..." 
-              value={filters.search}
+              value={searchInput}
               onChange={handleFilterChange}
             />
           </div>
@@ -148,23 +186,43 @@ const StockLogs = () => {
       </div>
 
       {/* Logs Table Card */}
-      <div className="card">
+      <div className="card" style={{ position: 'relative', minHeight: '300px' }}>
         <h3 className="card-title">
           <Database size={18} className="text-primary" />
           <span>Nhật ký chi tiết lịch sử kho hàng</span>
         </h3>
 
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <span className="text-secondary">Đang tải nhật ký lịch sử kho...</span>
+        {showOverlay && logs.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(255, 255, 255, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+            backdropFilter: 'blur(1px)',
+            transition: 'opacity 0.2s ease',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ display: 'inline-block', width: '32px', height: '32px', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Đang cập nhật danh sách...</span>
+            </div>
+          </div>
+        )}
+
+        {showOverlay && logs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '5rem 0' }}>
+            <div style={{ display: 'inline-block', width: '32px', height: '32px', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1rem' }} />
+            <div><span className="text-secondary" style={{ fontWeight: 500 }}>Đang tải nhật ký lịch sử kho...</span></div>
           </div>
         ) : logs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+          <div style={{ textAlign: 'center', padding: '5rem 0' }}>
             <AlertCircle size={40} className="text-muted" style={{ marginBottom: '1rem' }} />
             <p style={{ color: 'var(--text-secondary)' }}>Không tìm thấy dữ liệu nhật ký kho phù hợp.</p>
           </div>
         ) : (
-          <>
+          <div style={{ opacity: showOverlay ? 0.6 : 1, pointerEvents: showOverlay ? 'none' : 'auto', transition: 'opacity 0.2s ease' }}>
             <div className="table-responsive">
               <table className="table">
                 <thead>
@@ -241,7 +299,7 @@ const StockLogs = () => {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 

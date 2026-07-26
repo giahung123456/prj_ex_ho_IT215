@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productService, categoryService, cartService } from '../services/api';
 import { useToast } from '../context/ToastContext';
@@ -23,6 +23,17 @@ const Storefront = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => setShowOverlay(true), 250);
+    } else {
+      setShowOverlay(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -34,6 +45,11 @@ const Storefront = () => {
     page: 0,
     size: 12
   });
+
+  // Local input states for debouncing
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const [minPriceInput, setMinPriceInput] = useState(filters.minPrice);
+  const [maxPriceInput, setMaxPriceInput] = useState(filters.maxPrice);
 
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
@@ -76,13 +92,49 @@ const Storefront = () => {
     loadProducts();
   }, [filters]);
 
+  // Sync local input states with filters state (e.g. when filters are cleared)
+  useEffect(() => {
+    setSearchInput(filters.search);
+    setMinPriceInput(filters.minPrice);
+    setMaxPriceInput(filters.maxPrice);
+  }, [filters.search, filters.minPrice, filters.maxPrice]);
+
+  // Debounce API calls for text/number filters
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (
+        searchInput !== filters.search ||
+        minPriceInput !== filters.minPrice ||
+        maxPriceInput !== filters.maxPrice
+      ) {
+        setFilters(prev => ({
+          ...prev,
+          search: searchInput,
+          minPrice: minPriceInput,
+          maxPrice: maxPriceInput,
+          page: 0
+        }));
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchInput, minPriceInput, maxPriceInput, filters.search, filters.minPrice, filters.maxPrice]);
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value,
-      page: 0
-    }));
+    if (name === 'search') {
+      setSearchInput(value);
+    } else if (name === 'minPrice') {
+      setMinPriceInput(value);
+    } else if (name === 'maxPrice') {
+      setMaxPriceInput(value);
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        [name]: value,
+        page: 0
+      }));
+    }
   };
 
   const handleClearFilters = () => {
@@ -174,89 +226,44 @@ const Storefront = () => {
     return getProductImagePlaceholder(id, catName);
   };
 
-  return (
-    <div className="animate-slideup" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      
-      {/* Storefront Banner Hero */}
-      <div className="storefront-header-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fffbeb', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
-          <Sparkles size={16} />
-          <span>Khám phá sản phẩm công nghệ hot nhất</span>
+  const renderedProducts = useMemo(() => {
+    if (showOverlay && products.length === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: '10rem 0', minHeight: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'inline-block', width: '36px', height: '36px', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1rem' }} />
+          <div><span className="text-secondary" style={{ fontSize: '1rem', fontWeight: 600 }}>Đang chuẩn bị sản phẩm lên kệ hàng...</span></div>
         </div>
-        <h1 className="storefront-title">Mua Sắm Đồ Công Nghệ Cao Cấp</h1>
-        <p className="storefront-subtitle">
-          Tìm kiếm những thiết bị điện tử, laptop và phụ kiện thông minh đỉnh cao nhất với mức giá chiết khấu ưu đãi hấp dẫn.
-        </p>
-      </div>
-
-      {/* Filter and Search Section */}
-      <div className="card">
-        <div className="storefront-controls">
-          <div className="input-wrapper">
-            <Search size={18} className="input-icon" />
-            <input 
-              type="text" 
-              name="search"
-              className="form-input" 
-              placeholder="Bạn đang tìm kiếm thiết bị nào hôm nay?..." 
-              value={filters.search}
-              onChange={handleFilterChange}
-            />
-          </div>
-
-          <select 
-            name="categoryId" 
-            className="form-input"
-            style={{ minWidth: '180px' }}
-            value={filters.categoryId}
-            onChange={handleFilterChange}
-          >
-            <option value="">-- Tất cả danh mục --</option>
-            {categories.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input 
-              type="number" 
-              name="minPrice" 
-              className="form-input" 
-              placeholder="Giá từ" 
-              style={{ maxWidth: '120px' }}
-              value={filters.minPrice}
-              onChange={handleFilterChange}
-            />
-            <span style={{ color: 'var(--text-muted)' }}>-</span>
-            <input 
-              type="number" 
-              name="maxPrice" 
-              className="form-input" 
-              placeholder="Đến" 
-              style={{ maxWidth: '120px' }}
-              value={filters.maxPrice}
-              onChange={handleFilterChange}
-            />
-          </div>
-
-          <button onClick={handleClearFilters} className="btn btn-secondary">
-            Xóa lọc
-          </button>
-        </div>
-      </div>
-
-      {/* Products Grid */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '5rem' }}>
-          <span className="text-secondary" style={{ fontSize: '1rem', fontWeight: 600 }}>Đang chuẩn bị sản phẩm lên kệ hàng...</span>
-        </div>
-      ) : products.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '5rem 0' }}>
+      );
+    }
+    if (products.length === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: '8rem 0' }}>
           <AlertCircle size={44} className="text-muted" style={{ marginBottom: '1rem' }} />
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', fontWeight: 500 }}>Rất tiếc! Cửa hàng tạm thời chưa có mặt hàng này.</p>
         </div>
-      ) : (
-        <>
+      );
+    }
+    return (
+      <div style={{ position: 'relative', minHeight: '400px' }}>
+        {showOverlay && products.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(255, 255, 255, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+            backdropFilter: 'blur(1px)',
+            transition: 'opacity 0.2s ease',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ display: 'inline-block', width: '36px', height: '36px', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Đang cập nhật kệ hàng...</span>
+            </div>
+          </div>
+        )}
+        <div style={{ opacity: showOverlay ? 0.6 : 1, pointerEvents: showOverlay ? 'none' : 'auto', transition: 'opacity 0.2s ease' }}>
           <div className="product-grid-retail">
             {products.map((p) => {
               const isOutOfStock = p.stockQuantity === 0;
@@ -345,8 +352,84 @@ const Storefront = () => {
               </button>
             </div>
           )}
-        </>
-      )}
+        </div>
+      </div>
+    );
+  }, [products, loading, showOverlay, totalPages, filters.page, isAdding]);
+
+  return (
+    <div className="animate-slideup" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      
+      {/* Storefront Banner Hero */}
+      <div className="storefront-header-card">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fffbeb', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>
+          <Sparkles size={16} />
+          <span>Khám phá sản phẩm công nghệ hot nhất</span>
+        </div>
+        <h1 className="storefront-title">Mua Sắm Đồ Công Nghệ Cao Cấp</h1>
+        <p className="storefront-subtitle">
+          Tìm kiếm những thiết bị điện tử, laptop và phụ kiện thông minh đỉnh cao nhất với mức giá chiết khấu ưu đãi hấp dẫn.
+        </p>
+      </div>
+
+      {/* Filter and Search Section */}
+      <div className="card">
+        <div className="storefront-controls">
+          <div className="input-wrapper">
+            <Search size={18} className="input-icon" />
+            <input 
+              type="text" 
+              name="search"
+              className="form-input" 
+              placeholder="Bạn đang tìm kiếm thiết bị nào hôm nay?..." 
+              value={searchInput}
+              onChange={handleFilterChange}
+            />
+          </div>
+
+          <select 
+            name="categoryId" 
+            className="form-input"
+            style={{ minWidth: '180px' }}
+            value={filters.categoryId}
+            onChange={handleFilterChange}
+          >
+            <option value="">-- Tất cả danh mục --</option>
+            {categories.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <input 
+              type="number" 
+              name="minPrice" 
+              className="form-input" 
+              placeholder="Giá từ" 
+              style={{ maxWidth: '120px' }}
+              value={minPriceInput}
+              onChange={handleFilterChange}
+            />
+            <span style={{ color: 'var(--text-muted)' }}>-</span>
+            <input 
+              type="number" 
+              name="maxPrice" 
+              className="form-input" 
+              placeholder="Đến" 
+              style={{ maxWidth: '120px' }}
+              value={maxPriceInput}
+              onChange={handleFilterChange}
+            />
+          </div>
+
+          <button onClick={handleClearFilters} className="btn btn-secondary">
+            Xóa lọc
+          </button>
+        </div>
+      </div>
+
+      {/* Products Grid */}
+      {renderedProducts}
 
       {/* DETAIL MODAL */}
       {showDetailModal && selectedProduct && (

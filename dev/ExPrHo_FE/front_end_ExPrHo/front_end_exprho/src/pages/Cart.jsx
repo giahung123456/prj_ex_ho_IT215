@@ -9,7 +9,8 @@ import {
   CreditCard,
   Plus,
   Minus,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 
 const Cart = () => {
@@ -19,6 +20,7 @@ const Cart = () => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const loadCart = async () => {
     setLoading(true);
@@ -75,17 +77,23 @@ const Cart = () => {
     }
   };
 
-  const handleClearCart = async () => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng không?')) {
-      try {
-        await cartService.clear();
-        setCart({ items: [], totalPrice: 0 });
-        showToast('Thành công', 'Đã làm trống giỏ hàng.', 'success');
-        window.dispatchEvent(new Event('cart-updated'));
-      } catch (err) {
-        console.error(err);
-        showToast('Lỗi thao tác', 'Không thể xóa giỏ hàng.', 'error');
-      }
+  const handleClearCart = () => {
+    setShowClearConfirm(true);
+  };
+
+  const confirmClearCart = async () => {
+    setShowClearConfirm(false);
+    setIsUpdating(true);
+    try {
+      await cartService.clear();
+      setCart({ items: [], totalPrice: 0 });
+      showToast('Thành công', 'Đã làm trống giỏ hàng.', 'success');
+      window.dispatchEvent(new Event('cart-updated'));
+    } catch (err) {
+      console.error(err);
+      showToast('Lỗi thao tác', 'Không thể xóa giỏ hàng.', 'error');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -267,6 +275,61 @@ const Cart = () => {
 
             <div style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               Đảm bảo hàng chính hãng 100% • Trả hàng miễn phí 7 ngày
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM CONFIRM CLEAR CART MODAL */}
+      {showClearConfirm && (
+        <div className="modal-backdrop" style={{ zIndex: 1100 }}>
+          <div className="modal-card" style={{ maxWidth: '420px' }}>
+            <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
+              <span className="modal-title text-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--error)' }}>
+                <AlertCircle size={22} />
+                Xác Nhận Xóa Giỏ Hàng
+              </span>
+              <button className="modal-close-btn" onClick={() => setShowClearConfirm(false)} disabled={isUpdating}>
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="modal-body" style={{ paddingTop: '1rem' }}>
+              <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', marginBottom: '1.75rem', lineHeight: 1.5 }}>
+                Bạn có chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng không? Hành động này không thể hoàn tác.
+              </p>
+              
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowClearConfirm(false)}
+                  disabled={isUpdating}
+                  style={{ width: 'auto' }}
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={confirmClearCart}
+                  disabled={isUpdating}
+                  style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--error)', border: 'none', color: '#fff' }}
+                >
+                  {isUpdating ? (
+                    <div 
+                      style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        border: '2px solid rgba(255,255,255,0.3)', 
+                        borderTopColor: '#fff', 
+                        borderRadius: '50%', 
+                        animation: 'spin 1s linear infinite' 
+                      }} 
+                    />
+                  ) : 'Xác nhận xóa'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

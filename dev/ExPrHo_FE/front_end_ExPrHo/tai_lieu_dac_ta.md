@@ -64,6 +64,7 @@
     - [3.12 UC12: Quản lý giỏ hàng](#312-uc12-quản-lý-giỏ-hàng)
     - [3.13 UC13: Đặt hàng & Mua sản phẩm](#313-uc13-đặt-hàng--mua-sản-phẩm)
     - [3.14 UC14: Đăng ký tài khoản](#314-uc14-đăng-ký-tài-khoản)
+    - [3.15 UC15: Thống kê & Báo cáo (Dashboard)](#315-uc15-thống-kê--báo-cáo-dashboard)
 4. [PHẦN 4: CÁC COMPONENT, THÔNG BÁO, CẢNH BÁO](#phần-4-các-component-thông-báo-cảnh-báo)
 5. [PHẦN 5: LINK ISSUE (JIRA)](#phần-5-link-issue-jira)
 
@@ -855,6 +856,33 @@ flowchart TD
 
 ---
 
+### 3.15 UC15: Thống kê & Báo cáo (Dashboard)
+
+#### 3.15.1 Đặc tả Use Case
+- **Use Case ID**: **UC15**
+- **Mô tả**: Cung cấp giao diện báo cáo tổng quan dưới dạng số liệu trực quan và biểu đồ, tương ứng với vai trò của người dùng (Admin, Storekeeper, Sales) để hỗ trợ theo dõi hiệu suất kinh doanh và quản lý kho.
+- **Tác nhân**: ADMIN, STOREKEEPER, SALES
+- **Sự ưu tiên**: Trung bình
+- **Trigger**: Chọn menu "Tổng quan" hoặc truy cập trực tiếp trang Dashboard.
+- **Pre-Condition**: Người dùng đã đăng nhập thành công và có token hợp lệ với vai trò tương ứng.
+- **Post-Condition**:
+  - Dữ liệu thống kê được hiển thị trực quan lên giao diện.
+- **Basic Flow**:
+  1. Người dùng chọn mục **Tổng quan (Dashboard)** từ Sidebar điều hướng.
+  2. Hệ thống kiểm tra vai trò người dùng trong JWT Token:
+     - **Nếu là ADMIN**: Hệ thống gọi API thống kê Admin (`/api/v1/dashboard/admin`) và hiển thị: tổng doanh thu, biểu đồ doanh thu theo thời gian, top sản phẩm bán chạy, bảng xếp hạng doanh số nhân viên Sales và cảnh báo kho.
+     - **Nếu là STOREKEEPER**: Hệ thống gọi API thống kê Thủ kho (`/api/v1/dashboard/storekeeper`) và hiển thị: tổng số sản phẩm, số mặt hàng hết/sắp hết hàng, cơ cấu danh mục sản phẩm và tổng số giao dịch kho trong ngày.
+     - **Nếu là SALES**: Hệ thống gọi API thống kê Bán hàng (`/api/v1/dashboard/sales`) và hiển thị: doanh thu cá nhân đạt được, số đơn hàng do mình chốt phân theo trạng thái và biểu đồ doanh số cá nhân.
+  3. Hệ thống trả về dữ liệu thành công và hiển thị giao diện báo cáo tương ứng bằng các biểu đồ trực quan (Recharts/Chart.js).
+- **Exception Flow**:
+  - **Exception 1 (Người dùng truy cập trái quyền)**: Ví dụ SALES cố gắng gửi request trực tiếp đến API thống kê của ADMIN. Hệ thống phát hiện vi phạm quyền hạn qua token, trả về mã lỗi `403 Forbidden` và báo lỗi trên giao diện.
+- **Business Rules**:
+  - Nhân viên Sales chỉ được phép xem thống kê doanh số của chính mình.
+  - Các thống kê doanh thu chỉ tính trên các đơn hàng có trạng thái `COMPLETED` (Đã hoàn thành).
+  - Ngưỡng cảnh báo sản phẩm sắp hết hàng (Low-stock) mặc định là số lượng tồn kho `< 10` sản phẩm.
+
+---
+
 ## PHẦN 4: CÁC COMPONENT, THÔNG BÁO, CẢNH BÁO
 
 Dưới đây là danh sách chuẩn hóa toàn bộ các mã thông báo thành công, cảnh báo lỗi và các định dạng hiển thị UI (Component Badges):
@@ -878,6 +906,7 @@ Dưới đây là danh sách chuẩn hóa toàn bộ các mã thông báo thành
 | `MSG_SUCCESS_13` | "Đã cập nhật giỏ hàng thành công!" | Trang sản phẩm / Giỏ hàng | Toast nhỏ hiển thị khi thêm/sửa giỏ hàng. |
 | `MSG_SUCCESS_14` | "Đặt hàng thành công! Đang xử lý đơn hàng..." | Trang thanh toán | Chuyển hướng khách hàng về trang lịch sử đơn hàng. |
 | `MSG_SUCCESS_15` | "Đăng ký tài khoản thành công! Đang chuyển hướng..." | Trang đăng ký | Toast màu xanh lá, tự động chuyển hướng về trang Đăng nhập sau 2 giây. |
+| `MSG_SUCCESS_16` | "Tải dữ liệu báo cáo thống kê thành công." | Dashboard | Đã tải xong dữ liệu biểu đồ. |
 
 ### 4.2 Danh sách cảnh báo lỗi (Error Messages)
 
@@ -965,3 +994,9 @@ Dưới đây là danh sách liên kết mã nhiệm vụ trên hệ thống qu�
 - [PRD-ORDER-04](https://jira.company.com/browse/PRD-ORDER-04): Phát triển API & Giao diện Đặt hàng, điền thông tin giao hàng (UC13).
 - [PRD-ORDER-05](https://jira.company.com/browse/PRD-ORDER-05): Phát triển nghiệp vụ kiểm tra tồn kho, trừ kho và đồng bộ `STOCK_LOG` trong Transaction.
 - [PRD-ORDER-06](https://jira.company.com/browse/PRD-ORDER-06): Phát triển màn hình danh sách đơn hàng và quản lý trạng thái đơn hàng (Admin/Sales).
+
+### 5.5 Phân hệ Thống kê & Báo cáo (Dashboard)
+- [PRD-DASHBOARD-01](https://jira.company.com/browse/PRD-DASHBOARD-01): Thiết kế CSDL & Viết API thống kê tích hợp theo vai trò Admin, Storekeeper, Sales (UC15).
+- [PRD-DASHBOARD-02](https://jira.company.com/browse/PRD-DASHBOARD-02): Phát triển giao diện Dashboard hiển thị thông tin động dựa trên vai trò người dùng đăng nhập.
+- [PRD-DASHBOARD-03](https://jira.company.com/browse/PRD-DASHBOARD-03): Tích hợp thư viện biểu đồ trực quan hóa dữ liệu (doanh thu, tồn kho, sản phẩm bán chạy).
+- [PRD-DASHBOARD-04](https://jira.company.com/browse/PRD-DASHBOARD-04): Kiểm thử phân quyền truy cập API thống kê và kiểm tra rò rỉ dữ liệu bán hàng.

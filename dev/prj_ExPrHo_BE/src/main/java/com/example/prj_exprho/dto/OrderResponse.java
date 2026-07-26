@@ -19,5 +19,6 @@ public class OrderResponse {
     private String shippingPhone;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String salesUsername;
     private List<OrderItemResponse> items;
 }

@@ -21,10 +21,30 @@ const CustomerManagement = () => {
   const { showToast } = useToast();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => setShowOverlay(true), 250);
+    } else {
+      setShowOverlay(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Search & Filter state
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   // Modal controls
   const [modalOpen, setModalOpen] = useState(false);
@@ -202,8 +222,8 @@ const CustomerManagement = () => {
               type="text"
               className="search-input"
               placeholder="Tìm kiếm khách hàng (Tên, SĐT, Email, Mã)..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               style={{ paddingLeft: '2.5rem' }}
             />
           </div>
@@ -226,8 +246,26 @@ const CustomerManagement = () => {
       </div>
 
       {/* Customers List Table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="table-responsive">
+      <div className="card" style={{ padding: 0, overflow: 'hidden', position: 'relative', minHeight: '300px' }}>
+        {showOverlay && customers.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(255, 255, 255, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+            backdropFilter: 'blur(1px)',
+            transition: 'opacity 0.2s ease',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ display: 'inline-block', width: '32px', height: '32px', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Đang cập nhật danh sách...</span>
+            </div>
+          </div>
+        )}
+        <div className="table-responsive" style={{ opacity: showOverlay && customers.length > 0 ? 0.6 : 1, pointerEvents: showOverlay && customers.length > 0 ? 'none' : 'auto', transition: 'opacity 0.2s ease' }}>
           <table className="custom-table">
             <thead>
               <tr>
@@ -242,9 +280,9 @@ const CustomerManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {showOverlay && customers.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '3rem' }}>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '5rem' }}>
                     <div 
                       style={{ 
                         display: 'inline-block', 
@@ -256,7 +294,7 @@ const CustomerManagement = () => {
                         animation: 'spin 1s linear infinite' 
                       }} 
                     />
-                    <span style={{ marginLeft: '0.75rem', color: 'var(--text-secondary)' }}>Đang tải danh sách...</span>
+                    <span style={{ marginLeft: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Đang tải danh sách...</span>
                   </td>
                 </tr>
               ) : customers.length === 0 ? (

@@ -134,3 +134,50 @@ Tài liệu này phân chia nhiệm vụ chi tiết giữa đội ngũ phát tri
     - Xóa sản phẩm khỏi giỏ hàng sau khi đặt thành công.
   - **API Lịch sử đơn hàng**: Trả về danh sách đơn hàng của khách hàng hiện tại.
   - **API Cập nhật trạng thái đơn hàng (Sales / Admin)**: Cho phép chuyển trạng thái đơn hàng (PENDING -> CONFIRMED -> SHIPPING -> COMPLETED / CANCELLED).
+
+---
+
+## 6. PHÂN HỆ THỐNG KÊ & BÁO CÁO (DASHBOARD) DÀNH CHO ADMIN, THỦ KHO (STOREKEEPER) & BÁN HÀNG (SALES)
+
+### 6.1 Nhiệm vụ Frontend
+- **Giao diện & Trải nghiệm (UI/UX)**:
+  - Thiết kế màn hình **Dashboard Overview** có khả năng thay đổi giao diện/thống kê linh hoạt tùy thuộc vào vai trò của tài khoản đang đăng nhập:
+    - **Giao diện Admin**:
+      - Các thẻ tóm tắt (Cards): Tổng doanh thu (VNĐ), Tổng số đơn hàng (phân chia theo trạng thái), Tổng số sản phẩm, Tổng số khách hàng và nhân viên.
+      - Biểu đồ: Doanh thu theo thời gian (ngày/tháng), Biểu đồ top 5 sản phẩm bán chạy nhất.
+      - Bảng xếp hạng doanh số nhân viên kinh doanh (Sales) có hiệu suất cao nhất.
+      - Khung cảnh báo sản phẩm sắp hết hàng (Low-stock alerts).
+    - **Giao diện Thủ kho (Storekeeper)**:
+      - Các thẻ tóm tắt (Cards): Tổng số sản phẩm trong kho, Số lượng sản phẩm đã hết hàng (Out of stock), Số lượng sản phẩm sắp hết hàng (dưới ngưỡng an toàn), Tổng số lượt nhập/xuất kho trong ngày.
+      - Biểu đồ: Cơ cấu tồn kho theo danh mục sản phẩm (Category allocation).
+      - Bảng liệt kê top các sản phẩm có lượng tồn kho thấp nhất cần nhập thêm.
+    - **Giao diện Bán hàng (Sales)**:
+      - Các thẻ tóm tắt (Cards): Doanh số cá nhân đạt được hôm nay/tháng này, Số đơn hàng cá nhân đã chốt thành công, Số đơn hàng đang chờ duyệt.
+      - Biểu đồ: Doanh số cá nhân theo các ngày trong tháng.
+      - Danh sách các đơn đặt hàng mới phát sinh cần xử lý gấp.
+- **Xử lý Logic & Tích hợp**:
+  - Tích hợp gọi các API tương ứng với từng vai trò sau khi xác định quyền hạn/vai trò từ JWT token.
+  - Sử dụng các thư viện biểu đồ (ví dụ: Chart.js, Recharts) để biểu diễn trực quan dữ liệu thống kê.
+  - Xử lý các khoảng thời gian lọc linh động (Hôm nay, 7 ngày qua, 30 ngày qua, Tháng này).
+
+### 6.2 Nhiệm vụ Backend
+- **Cơ sở dữ liệu & Tối ưu hóa truy vấn**:
+  - Viết các truy vấn SQL hoặc JPQL tổng hợp (Aggregation), sử dụng `SUM`, `COUNT`, `GROUP BY` tối ưu trên các bảng `orders`, `order_items`, `products`, `stock_logs`.
+  - Đánh chỉ mục (Index) trên các cột thời gian (`created_at`) và trạng thái đơn hàng để tối ưu hóa hiệu năng truy vấn báo cáo.
+- **Xây dựng API**:
+  - **API Thống kê Admin (`/api/v1/dashboard/admin`)**:
+    - Trả về tổng doanh thu của các đơn hàng có trạng thái `COMPLETED`.
+    - Trả về số lượng đơn hàng phân theo từng trạng thái.
+    - Trả về doanh thu theo các mốc thời gian lọc (ngày/tháng).
+    - Trả về danh sách top sản phẩm bán chạy nhất (tính theo số lượng bán và doanh thu thu về).
+    - Trả về danh sách xếp hạng doanh số của các tài khoản `SALES`.
+  - **API Thống kê Thủ kho (`/api/v1/dashboard/storekeeper`)**:
+    - Trả về số lượng sản phẩm có `stock_quantity = 0`.
+    - Trả về danh sách sản phẩm sắp hết hàng (ví dụ: `stock_quantity < 10`).
+    - Trả về tổng số lượng và số giao dịch nhập/xuất kho trong ngày từ bảng `stock_logs`.
+    - Trả về số lượng tồn kho tổng hợp theo từng danh mục.
+  - **API Thống kê Bán hàng (`/api/v1/dashboard/sales`)**:
+    - **Bảo mật**: Chỉ cho phép người dùng có vai trò `SALES` xem dữ liệu của chính mình dựa trên `userId` trích xuất từ JWT token (hoặc Admin được xem của tất cả).
+    - Trả về tổng doanh thu do chính nhân viên đó tạo ra (tính từ các đơn hàng hoàn thành có trường `created_by` hoặc `sales_id` trùng với nhân viên đó).
+    - Trả về số lượng đơn hàng do nhân viên đó phụ trách phân theo trạng thái.
+    - Trả về biểu đồ doanh thu cá nhân theo thời gian.

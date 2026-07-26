@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.List;
 
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
@@ -38,4 +39,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("status") String status,
             Pageable pageable);
+
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.stockQuantity = 0")
+    long countOutOfStockProducts();
+
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.stockQuantity > 0 AND p.stockQuantity < 10")
+    long countLowStockProducts();
+
+    @Query("SELECT p.category.name, COUNT(p) FROM Product p GROUP BY p.category.name")
+    List<Object[]> countProductsByCategory();
+
+    @Query("SELECT p FROM Product p ORDER BY p.stockQuantity ASC")
+    List<Product> findLowestStockProducts(Pageable pageable);
 }

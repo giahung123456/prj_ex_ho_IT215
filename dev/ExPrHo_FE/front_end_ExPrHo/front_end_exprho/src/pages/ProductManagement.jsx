@@ -27,6 +27,17 @@ const ProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      timer = setTimeout(() => setShowOverlay(true), 250);
+    } else {
+      setShowOverlay(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Pagination & Filtering
   const [filters, setFilters] = useState({
@@ -38,6 +49,11 @@ const ProductManagement = () => {
     page: 0,
     size: 8
   });
+
+  // Local input states for debouncing
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const [minPriceInput, setMinPriceInput] = useState(filters.minPrice);
+  const [maxPriceInput, setMaxPriceInput] = useState(filters.maxPrice);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
@@ -106,13 +122,49 @@ const ProductManagement = () => {
     loadProducts();
   }, [filters]);
 
+  // Sync local input states with filters state (e.g. when filters are cleared)
+  useEffect(() => {
+    setSearchInput(filters.search);
+    setMinPriceInput(filters.minPrice);
+    setMaxPriceInput(filters.maxPrice);
+  }, [filters.search, filters.minPrice, filters.maxPrice]);
+
+  // Debounce API calls for text/number filters
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (
+        searchInput !== filters.search ||
+        minPriceInput !== filters.minPrice ||
+        maxPriceInput !== filters.maxPrice
+      ) {
+        setFilters(prev => ({
+          ...prev,
+          search: searchInput,
+          minPrice: minPriceInput,
+          maxPrice: maxPriceInput,
+          page: 0
+        }));
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchInput, minPriceInput, maxPriceInput, filters.search, filters.minPrice, filters.maxPrice]);
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value,
-      page: 0 // Reset to first page on filter change
-    }));
+    if (name === 'search') {
+      setSearchInput(value);
+    } else if (name === 'minPrice') {
+      setMinPriceInput(value);
+    } else if (name === 'maxPrice') {
+      setMaxPriceInput(value);
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        [name]: value,
+        page: 0 // Reset to first page on filter change
+      }));
+    }
   };
 
   const handleClearFilters = () => {
@@ -404,7 +456,7 @@ const ProductManagement = () => {
               name="search"
               className="form-input" 
               placeholder="Tìm kiếm theo Tên hoặc SKU..." 
-              value={filters.search}
+              value={searchInput}
               onChange={handleFilterChange}
             />
           </div>
@@ -449,7 +501,7 @@ const ProductManagement = () => {
             className="form-input" 
             placeholder="Giá tối thiểu" 
             style={{ maxWidth: '140px', padding: '0.35rem 0.6rem', fontSize: '0.85rem' }} 
-            value={filters.minPrice}
+            value={minPriceInput}
             onChange={handleFilterChange}
           />
           <span style={{ color: 'var(--text-muted)' }}>-</span>
@@ -459,25 +511,45 @@ const ProductManagement = () => {
             className="form-input" 
             placeholder="Giá tối đa" 
             style={{ maxWidth: '140px', padding: '0.35rem 0.6rem', fontSize: '0.85rem' }} 
-            value={filters.maxPrice}
+            value={maxPriceInput}
             onChange={handleFilterChange}
           />
         </div>
       </div>
 
       {/* Products Table Card */}
-      <div className="card">
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <span className="text-secondary">Đang tải danh sách sản phẩm...</span>
+      <div className="card" style={{ position: 'relative', minHeight: '300px' }}>
+        {showOverlay && products.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(255, 255, 255, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+            backdropFilter: 'blur(1px)',
+            transition: 'opacity 0.2s ease',
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ display: 'inline-block', width: '32px', height: '32px', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Đang cập nhật danh sách...</span>
+            </div>
+          </div>
+        )}
+
+        {showOverlay && products.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '5rem 0' }}>
+            <div style={{ display: 'inline-block', width: '32px', height: '32px', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1rem' }} />
+            <div><span className="text-secondary" style={{ fontWeight: 500 }}>Đang tải danh sách sản phẩm...</span></div>
           </div>
         ) : products.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+          <div style={{ textAlign: 'center', padding: '5rem 0' }}>
             <AlertCircle size={40} className="text-muted" style={{ marginBottom: '1rem' }} />
             <p style={{ color: 'var(--text-secondary)' }}>Không tìm thấy sản phẩm nào phù hợp bộ lọc.</p>
           </div>
         ) : (
-          <>
+          <div style={{ opacity: showOverlay ? 0.6 : 1, pointerEvents: showOverlay ? 'none' : 'auto', transition: 'opacity 0.2s ease' }}>
             <div className="table-responsive">
               <table className="table">
                 <thead>
@@ -585,7 +657,7 @@ const ProductManagement = () => {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 

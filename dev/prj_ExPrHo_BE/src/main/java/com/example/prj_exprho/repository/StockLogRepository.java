@@ -25,4 +25,9 @@ public interface StockLogRepository extends JpaRepository<StockLog, Long> {
             @Param("endDate") LocalDateTime endDate,
             @Param("search") String search,
             Pageable pageable);
+
+    @Query("SELECT sl.type, COUNT(sl), SUM(ABS(sl.changeQuantity)) " +
+           "FROM StockLog sl WHERE sl.createdAt >= :startDate " +
+           "GROUP BY sl.type")
+    java.util.List<Object[]> findDailyStockLogSummaryFrom(@Param("startDate") java.time.LocalDateTime startDate);
 }
