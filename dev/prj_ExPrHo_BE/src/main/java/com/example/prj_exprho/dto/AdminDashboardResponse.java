@@ -18,7 +18,9 @@ public class AdminDashboardResponse {
     private Map<String, Long> ordersByStatus;
     private List<TrendItem> revenueTrend;
     private List<TopProductItem> topProducts;
-    private List<SalesRankItem> salesRanking;
+    private List<OrderResponse> recentOrders;
+    private List<ProductResponse> lowStockProducts;
+    private List<CategoryRevenueItem> categoryRevenue;
     private Long lowStockCount;
 
     @Getter
@@ -49,11 +51,8 @@ public class AdminDashboardResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class SalesRankItem {
-        private Long salesId;
-        private String salesName;
-        private String salesUsername;
-        private Long ordersCount;
+    public static class CategoryRevenueItem {
+        private String categoryName;
         private BigDecimal revenue;
     }
 }

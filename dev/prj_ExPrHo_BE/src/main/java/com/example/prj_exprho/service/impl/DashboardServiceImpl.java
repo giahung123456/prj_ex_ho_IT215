@@ -33,6 +33,9 @@ public class DashboardServiceImpl implements DashboardService {
     @Autowired
     private StockLogRepository stockLogRepository;
 
+    @Autowired
+    private ActionLogRepository actionLogRepository;
+
     @Override
     @Transactional(readOnly = true)
     public AdminDashboardResponse getAdminStats(String period) {
@@ -50,6 +53,12 @@ public class DashboardServiceImpl implements DashboardService {
         // Orders count & stats in the period
         List<Object[]> statusCounts = orderRepository.countOrdersByStatusFrom(startDate);
         Map<String, Long> ordersByStatus = new HashMap<>();
+        ordersByStatus.put("PENDING", 0L);
+        ordersByStatus.put("CONFIRMED", 0L);
+        ordersByStatus.put("SHIPPING", 0L);
+        ordersByStatus.put("COMPLETED", 0L);
+        ordersByStatus.put("CANCELLED", 0L);
+
         long totalOrders = 0;
         for (Object[] obj : statusCounts) {
             String status = (String) obj[0];
@@ -96,15 +105,44 @@ public class DashboardServiceImpl implements DashboardService {
                         .build())
                 .collect(Collectors.toList());
 
-        // Sales Ranking
-        List<Object[]> salesRankingObjs = orderRepository.findSalesStaffRankingFrom(startDate);
-        List<AdminDashboardResponse.SalesRankItem> salesRanking = salesRankingObjs.stream()
-                .map(obj -> AdminDashboardResponse.SalesRankItem.builder()
-                        .salesId((Long) obj[0])
-                        .salesName((String) obj[1])
-                        .salesUsername((String) obj[2])
-                        .ordersCount(((Number) obj[3]).longValue())
-                        .revenue((BigDecimal) obj[4])
+        // 1. Category Revenue Breakdown
+        List<Object[]> catRevObjs = orderRepository.findCategoryRevenueFrom(startDate);
+        List<AdminDashboardResponse.CategoryRevenueItem> categoryRevenue = catRevObjs.stream()
+                .map(obj -> AdminDashboardResponse.CategoryRevenueItem.builder()
+                        .categoryName((String) obj[0])
+                        .revenue((BigDecimal) obj[1])
+                        .build())
+                .collect(Collectors.toList());
+
+        // 2. Recent 5 Orders overall
+        List<Order> recentOrdersList = orderRepository.findTop5ByOrderByCreatedAtDesc();
+        List<OrderResponse> recentOrders = recentOrdersList.stream()
+                .map(order -> OrderResponse.builder()
+                        .id(order.getId())
+                        .orderCode(order.getOrderCode())
+                        .totalAmount(order.getTotalAmount())
+                        .status(order.getStatus())
+                        .shippingAddress(order.getShippingAddress())
+                        .shippingPhone(order.getShippingPhone())
+                        .createdAt(order.getCreatedAt())
+                        .updatedAt(order.getUpdatedAt())
+                        .salesUsername(order.getSales() != null ? order.getSales().getUsername() : null)
+                        .username(order.getCustomer() != null ? order.getCustomer().getUsername() : null)
+                        .build())
+                .collect(Collectors.toList());
+
+        // 3. Top 5 Lowest Stock Products (Low stock alerts)
+        List<Product> lowStockProdsList = productRepository.findLowestStockProducts(PageRequest.of(0, 5));
+        List<ProductResponse> lowStockProducts = lowStockProdsList.stream()
+                .map(product -> ProductResponse.builder()
+                        .id(product.getId())
+                        .sku(product.getSku())
+                        .name(product.getName())
+                        .price(product.getPrice())
+                        .costPrice(product.getCostPrice())
+                        .stockQuantity(product.getStockQuantity())
+                        .status(product.getStatus())
+                        .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
                         .build())
                 .collect(Collectors.toList());
 
@@ -116,7 +154,9 @@ public class DashboardServiceImpl implements DashboardService {
                 .ordersByStatus(ordersByStatus)
                 .revenueTrend(revenueTrend)
                 .topProducts(topProducts)
-                .salesRanking(salesRanking)
+                .recentOrders(recentOrders)
+                .lowStockProducts(lowStockProducts)
+                .categoryRevenue(categoryRevenue)
                 .lowStockCount(lowStockCount)
                 .build();
     }
@@ -199,9 +239,15 @@ public class DashboardServiceImpl implements DashboardService {
             totalRevenue = BigDecimal.ZERO;
         }
 
-        // Orders count by status for Sales
-        List<Object[]> statusCounts = orderRepository.countOrdersByStatusForSalesFrom(salesUsername, startDate);
+        // Orders count by status for entire system (system-wide status distribution)
+        List<Object[]> statusCounts = orderRepository.countOrdersByStatusFrom(startDate);
         Map<String, Long> ordersByStatus = new HashMap<>();
+        ordersByStatus.put("PENDING", 0L);
+        ordersByStatus.put("CONFIRMED", 0L);
+        ordersByStatus.put("SHIPPING", 0L);
+        ordersByStatus.put("COMPLETED", 0L);
+        ordersByStatus.put("CANCELLED", 0L);
+
         long totalOrders = 0;
         for (Object[] obj : statusCounts) {
             String status = (String) obj[0];
@@ -210,71 +256,39 @@ public class DashboardServiceImpl implements DashboardService {
             totalOrders += count;
         }
 
-        // Revenue trend for Sales
-        List<Order> completedOrders = orderRepository.findCompletedOrdersBySalesFrom(salesUsername, startDate);
-        Map<String, BigDecimal> trendMap = new TreeMap<>();
-        
-        // Pre-populate trend days
-        LocalDateTime temp = startDate;
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        while (temp.isBefore(now) || temp.toLocalDate().isEqual(now.toLocalDate())) {
-            trendMap.put(temp.format(dtf), BigDecimal.ZERO);
-            temp = temp.plusDays(1);
-        }
-
-        for (Order order : completedOrders) {
-            String day = order.getCreatedAt().format(dtf);
-            BigDecimal current = trendMap.getOrDefault(day, BigDecimal.ZERO);
-            trendMap.put(day, current.add(order.getTotalAmount()));
-        }
-
-        List<AdminDashboardResponse.TrendItem> revenueTrend = trendMap.entrySet().stream()
-                .map(entry -> new AdminDashboardResponse.TrendItem(entry.getKey(), entry.getValue()))
+        // Top 5 Lowest Stock Products (Low stock alerts)
+        List<Product> lowStockProdsList = productRepository.findLowestStockProducts(PageRequest.of(0, 5));
+        List<ProductResponse> lowStockProducts = lowStockProdsList.stream()
+                .map(product -> ProductResponse.builder()
+                        .id(product.getId())
+                        .sku(product.getSku())
+                        .name(product.getName())
+                        .price(product.getPrice())
+                        .costPrice(null) // Security constraint: Sales role cannot view cost price
+                        .stockQuantity(product.getStockQuantity())
+                        .status(product.getStatus())
+                        .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
+                        .build())
                 .collect(Collectors.toList());
 
-        // Recent 5 orders managed by this Sales
-        List<Order> recentOrdersList = orderRepository.findTop5BySalesUsernameOrderByCreatedAtDesc(salesUsername);
-        List<OrderResponse> recentOrders = recentOrdersList.stream()
-                .map(order -> {
-                    // Quick mapping to OrderResponse
-                    List<OrderItem> orderItems = order.getItems() != null ? order.getItems() : orderItemRepository.findByOrderId(order.getId());
-                    List<OrderItemResponse> itemResponses = orderItems.stream().map(item -> {
-                        Product product = item.getProduct();
-                        BigDecimal price = item.getPrice() != null ? item.getPrice() : BigDecimal.ZERO;
-                        BigDecimal itemTotal = price.multiply(BigDecimal.valueOf(item.getQuantity()));
-                        return OrderItemResponse.builder()
-                                .id(item.getId())
-                                .productId(product != null ? product.getId() : null)
-                                .productSku(product != null ? product.getSku() : null)
-                                .productName(product != null ? product.getName() : null)
-                                .quantity(item.getQuantity())
-                                .price(price)
-                                .itemTotal(itemTotal)
-                                .build();
-                    }).collect(Collectors.toList());
-
-                    return OrderResponse.builder()
-                            .id(order.getId())
-                            .orderCode(order.getOrderCode())
-                            .totalAmount(order.getTotalAmount())
-                            .status(order.getStatus())
-                            .shippingAddress(order.getShippingAddress())
-                            .shippingPhone(order.getShippingPhone())
-                            .createdAt(order.getCreatedAt())
-                            .updatedAt(order.getUpdatedAt())
-                            .salesUsername(order.getSales() != null ? order.getSales().getUsername() : null)
-                            .items(itemResponses)
-                            .build();
-                })
+        // Top Selling Products of system
+        List<Object[]> topProductObjs = orderRepository.findTopSellingProductsFrom(startDate, PageRequest.of(0, 5));
+        List<AdminDashboardResponse.TopProductItem> topProducts = topProductObjs.stream()
+                .map(obj -> AdminDashboardResponse.TopProductItem.builder()
+                        .productId((Long) obj[0])
+                        .productName((String) obj[1])
+                        .sku((String) obj[2])
+                        .quantitySold(((Number) obj[3]).longValue())
+                        .revenue((BigDecimal) obj[4])
+                        .build())
                 .collect(Collectors.toList());
 
         return SalesDashboardResponse.builder()
                 .totalRevenue(totalRevenue)
                 .ordersCount(totalOrders)
                 .ordersByStatus(ordersByStatus)
-                .revenueTrend(revenueTrend)
-                .recentOrders(recentOrders)
+                .lowStockProducts(lowStockProducts)
+                .topProducts(topProducts)
                 .build();
     }
 

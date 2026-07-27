@@ -145,8 +145,9 @@ Tài liệu này phân chia nhiệm vụ chi tiết giữa đội ngũ phát tri
     - **Giao diện Admin**:
       - Các thẻ tóm tắt (Cards): Tổng doanh thu (VNĐ), Tổng số đơn hàng (phân chia theo trạng thái), Tổng số sản phẩm, Tổng số khách hàng và nhân viên.
       - Biểu đồ: Doanh thu theo thời gian (ngày/tháng), Biểu đồ top 5 sản phẩm bán chạy nhất.
-      - Bảng xếp hạng doanh số nhân viên kinh doanh (Sales) có hiệu suất cao nhất.
-      - Khung cảnh báo sản phẩm sắp hết hàng (Low-stock alerts).
+      - Cơ cấu doanh thu theo Danh mục sản phẩm (Revenue allocation by Category).
+      - Danh sách 5 đơn hàng mới nhất trên toàn hệ thống (Recent orders).
+      - Chi tiết các sản phẩm sắp hết hàng / Hết hàng (Low-stock details).
     - **Giao diện Thủ kho (Storekeeper)**:
       - Các thẻ tóm tắt (Cards): Tổng số sản phẩm trong kho, Số lượng sản phẩm đã hết hàng (Out of stock), Số lượng sản phẩm sắp hết hàng (dưới ngưỡng an toàn), Tổng số lượt nhập/xuất kho trong ngày.
       - Biểu đồ: Cơ cấu tồn kho theo danh mục sản phẩm (Category allocation).

@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -56,4 +57,18 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Object[]> countOrdersByStatusForSalesFrom(@Param("salesUsername") String salesUsername, @Param("startDate") java.time.LocalDateTime startDate);
 
     List<Order> findTop5BySalesUsernameOrderByCreatedAtDesc(String salesUsername);
+
+    List<Order> findTop5ByOrderByCreatedAtDesc();
+
+    @Query("SELECT c.name, SUM(oi.quantity * oi.price) " +
+           "FROM OrderItem oi " +
+           "JOIN oi.order o " +
+           "JOIN oi.product p " +
+           "JOIN p.category c " +
+           "WHERE o.status = 'COMPLETED' AND o.createdAt >= :startDate " +
+           "GROUP BY c.name " +
+           "ORDER BY SUM(oi.quantity * oi.price) DESC")
+    List<Object[]> findCategoryRevenueFrom(@Param("startDate") java.time.LocalDateTime startDate);
+
+    long countByStatus(String status);
 }

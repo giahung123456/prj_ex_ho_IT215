@@ -14,6 +14,6 @@ public class SalesDashboardResponse {
     private BigDecimal totalRevenue;
     private Long ordersCount;
     private Map<String, Long> ordersByStatus;
-    private List<AdminDashboardResponse.TrendItem> revenueTrend;
-    private List<OrderResponse> recentOrders;
+    private List<ProductResponse> lowStockProducts;
+    private List<AdminDashboardResponse.TopProductItem> topProducts;
 }

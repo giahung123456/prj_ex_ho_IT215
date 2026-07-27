@@ -20,5 +20,6 @@ public class OrderResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String salesUsername;
+    private String username;
     private List<OrderItemResponse> items;
 }

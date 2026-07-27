@@ -184,16 +184,26 @@ public class OrderServiceImpl implements OrderService {
         try {
             org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.getName() != null) {
-                userRepository.findByUsername(auth.getName()).ifPresent(user -> {
+                System.out.println("[DEBUG] Logged in username: " + auth.getName());
+                userRepository.findByUsername(auth.getName()).ifPresentOrElse(user -> {
+                    System.out.println("[DEBUG] Found user in DB: " + user.getUsername());
                     boolean isStaff = user.getRoles().stream()
                             .anyMatch(r -> "SALES".equalsIgnoreCase(r.getRoleName()) || "ADMIN".equalsIgnoreCase(r.getRoleName()));
+                    System.out.println("[DEBUG] Is staff (SALES/ADMIN)? " + isStaff + ", roles: " + 
+                        user.getRoles().stream().map(Role::getRoleName).collect(Collectors.joining(",")));
                     if (isStaff) {
                         order.setSales(user);
+                        System.out.println("[DEBUG] Associated sales user: " + user.getUsername() + " to order: " + order.getOrderCode());
                     }
+                }, () -> {
+                    System.err.println("[DEBUG] User NOT found in userRepository for name: " + auth.getName());
                 });
+            } else {
+                System.err.println("[DEBUG] Security Context Authentication is null or name is null");
             }
         } catch (Exception e) {
-            // Ignore
+            System.err.println("[DEBUG] Error associating sales user to order: " + e.getMessage());
+            e.printStackTrace();
         }
 
         Order updatedOrder = orderRepository.save(order);
@@ -247,6 +257,7 @@ public class OrderServiceImpl implements OrderService {
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .salesUsername(order.getSales() != null ? order.getSales().getUsername() : null)
+                .username(order.getCustomer() != null ? order.getCustomer().getUsername() : null)
                 .items(itemResponses)
                 .build();
     }

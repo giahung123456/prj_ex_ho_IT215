@@ -1777,5 +1777,81 @@ export const orderService = {
   }
 };
 
+export const dashboardService = {
+  getAdminStats: async (params = {}) => {
+    if (!USE_MOCK) {
+      const response = await api.get('/v1/dashboard/admin', { params });
+      return response.data;
+    }
+    await delay(300);
+    return {
+      totalRevenue: 54397000,
+      ordersCount: 3,
+      productsCount: 6,
+      customersCount: 4,
+      ordersByStatus: { COMPLETED: 3 },
+      revenueTrend: [
+        { date: '2026-07-22', revenue: 47980000 },
+        { date: '2026-07-26', revenue: 6417000 }
+      ],
+      topProducts: [
+        { productId: 1, productName: 'iPhone 16 128GB', sku: 'IP16-128-BLK', quantitySold: 2, revenue: 47980000 }
+      ],
+      recentOrders: [
+        { id: 1, orderCode: 'DH-100293', username: 'customer1', totalAmount: 47980000, status: 'COMPLETED', createdAt: new Date().toISOString() }
+      ],
+      lowStockProducts: [
+        { id: 3, sku: 'TSHIRT-001', name: 'Áo thun nam Basic Cotton', stockQuantity: 1, categoryName: 'Thời trang' }
+      ],
+      categoryRevenue: [
+        { categoryName: 'Thời trang', revenue: 498000 },
+        { categoryName: 'Điện thoại', revenue: 47980000 },
+        { categoryName: 'Đồ gia dụng', revenue: 5919000 }
+      ],
+      lowStockCount: 1
+    };
+  },
+
+  getStorekeeperStats: async () => {
+    if (!USE_MOCK) {
+      const response = await api.get('/v1/dashboard/storekeeper');
+      return response.data;
+    }
+    await delay(300);
+    return {
+      totalProducts: 6,
+      outOfStockCount: 0,
+      lowStockCount: 1,
+      categoryStockAllocation: { 'Thời trang': 2, 'Điện thoại': 1, 'Đồ gia dụng': 3 },
+      lowestStockProducts: [
+        { id: 3, sku: 'TSHIRT-001', name: 'Áo thun nam Basic Cotton', price: 249000, stockQuantity: 1, categoryName: 'Thời trang' }
+      ],
+      dailyImportCount: 0,
+      dailyExportCount: 0,
+      dailyAdjustCount: 0,
+      dailyTotalChangeQuantity: 0
+    };
+  },
+
+  getSalesStats: async (params = {}) => {
+    if (!USE_MOCK) {
+      const response = await api.get('/v1/dashboard/sales', { params });
+      return response.data;
+    }
+    await delay(300);
+    return {
+      totalRevenue: 54397000,
+      ordersCount: 31,
+      ordersByStatus: { PENDING: 5, CONFIRMED: 8, SHIPPING: 4, COMPLETED: 12, CANCELLED: 2 },
+      lowStockProducts: [
+        { id: 3, sku: 'TSHIRT-001', name: 'Áo thun nam Basic Cotton', price: 249000, stockQuantity: 1, categoryName: 'Thời trang' }
+      ],
+      topProducts: [
+        { productId: 1, productName: 'iPhone 16 128GB', sku: 'IP16-128-BLK', quantitySold: 2, revenue: 47980000 }
+      ]
+    };
+  }
+};
+
 export default api;
 
