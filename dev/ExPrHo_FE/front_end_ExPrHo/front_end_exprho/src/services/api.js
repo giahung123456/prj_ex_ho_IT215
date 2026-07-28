@@ -1843,8 +1843,9 @@ export const dashboardService = {
       totalRevenue: 54397000,
       ordersCount: 31,
       ordersByStatus: { PENDING: 5, CONFIRMED: 8, SHIPPING: 4, COMPLETED: 12, CANCELLED: 2 },
-      lowStockProducts: [
-        { id: 3, sku: 'TSHIRT-001', name: 'Áo thun nam Basic Cotton', price: 249000, stockQuantity: 1, categoryName: 'Thời trang' }
+      highestPricedOrders: [
+        { id: 1, orderCode: 'DH-100293', username: 'customer1', totalAmount: 47980000, status: 'COMPLETED', createdAt: new Date().toISOString() },
+        { id: 2, orderCode: 'DH-100294', username: 'customer2', totalAmount: 24900000, status: 'COMPLETED', createdAt: new Date().toISOString() }
       ],
       topProducts: [
         { productId: 1, productName: 'iPhone 16 128GB', sku: 'IP16-128-BLK', quantitySold: 2, revenue: 47980000 }

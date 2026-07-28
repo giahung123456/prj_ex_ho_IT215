@@ -667,14 +667,14 @@ const DashboardOverview = () => {
               )}
             </div>
 
-            {/* Right: Low Stock Alerts */}
+            {/* Right: Top 5 Highest Stock Products */}
             <div className="card">
               <h3 className="card-title">
-                <AlertTriangle size={20} className="text-warning" />
-                <span>Sản phẩm sắp hết hàng / Hết hàng</span>
+                <Package size={20} className="text-primary" />
+                <span>Top 5 sản phẩm tồn kho nhiều nhất</span>
               </h3>
-              {adminData.lowStockProducts?.length === 0 ? (
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>Tất cả sản phẩm đều có lượng hàng an toàn.</p>
+              {!adminData.highestStockProducts || adminData.highestStockProducts.length === 0 ? (
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>Không có sản phẩm nào trong kho.</p>
               ) : (
                 <div className="table-responsive" style={{ marginTop: '0.75rem' }}>
                   <table className="table" style={{ fontSize: '0.8rem' }}>
@@ -687,13 +687,13 @@ const DashboardOverview = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {adminData.lowStockProducts.map((p) => (
+                      {adminData.highestStockProducts.map((p) => (
                         <tr key={p.id}>
                           <td style={{ fontWeight: 700 }}>{p.sku}</td>
                           <td style={{ fontWeight: 500 }}>{p.name}</td>
                           <td style={{ color: 'var(--text-secondary)' }}>{p.categoryName}</td>
                           <td>
-                            <span className={`badge ${p.stockQuantity === 0 ? 'badge-cancelled' : p.stockQuantity < 10 ? 'badge-pending' : 'badge-completed'}`}>
+                            <span className="badge badge-completed">
                               {p.stockQuantity} sp
                             </span>
                           </td>
@@ -794,7 +794,7 @@ const DashboardOverview = () => {
             <div className="card">
               <h3 className="card-title">
                 <AlertTriangle size={20} className="text-warning" />
-                <span>Sản phẩm tồn kho thấp nhất (Cần chú ý)</span>
+                <span>Top 10 sản phẩm tồn kho thấp nhất (Cần chú ý)</span>
               </h3>
               {storekeeperData.lowestStockProducts?.length === 0 ? (
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>Kho đã được lấp đầy, không có sản phẩm nào sắp hết.</p>
@@ -860,34 +860,34 @@ const DashboardOverview = () => {
 
           {/* Charts Row for Sales */}
           <div className="grid-2">
-            {/* Low Stock Alerts for Sales */}
+            {/* Top 5 Highest Priced Orders for Sales */}
             <div className="card">
               <h3 className="card-title">
-                <AlertTriangle size={20} className="text-warning" />
-                <span>Sản phẩm sắp hết hàng / Hết hàng</span>
+                <ClipboardList size={20} className="text-primary" />
+                <span>Top 5 đơn hàng có giá cao nhất</span>
               </h3>
-              {salesData.lowStockProducts?.length === 0 ? (
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>Tất cả sản phẩm đều có lượng hàng an toàn.</p>
+              {salesData.highestPricedOrders?.length === 0 ? (
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>Không có đơn hàng nào.</p>
               ) : (
                 <div className="table-responsive" style={{ marginTop: '0.75rem' }}>
                   <table className="table" style={{ fontSize: '0.8rem' }}>
                     <thead>
                       <tr>
-                        <th>SKU</th>
-                        <th>Tên sản phẩm</th>
-                        <th>Danh mục</th>
-                        <th>Số lượng tồn</th>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {salesData.lowStockProducts.map((p) => (
-                        <tr key={p.id}>
-                          <td style={{ fontWeight: 700 }}>{p.sku}</td>
-                          <td style={{ fontWeight: 500 }}>{p.name}</td>
-                          <td style={{ color: 'var(--text-secondary)' }}>{p.categoryName}</td>
+                      {salesData.highestPricedOrders.map((ord) => (
+                        <tr key={ord.id}>
+                          <td style={{ fontWeight: 700 }}>{ord.orderCode}</td>
+                          <td>{ord.username || 'Khách'}</td>
+                          <td style={{ fontWeight: 600 }}>{formatPrice(ord.totalAmount)}</td>
                           <td>
-                            <span className={`badge ${p.stockQuantity === 0 ? 'badge-cancelled' : p.stockQuantity < 10 ? 'badge-pending' : 'badge-completed'}`}>
-                              {p.stockQuantity} sp
+                            <span className={`badge badge-${ord.status.toLowerCase()}`}>
+                              {ord.status}
                             </span>
                           </td>
                         </tr>

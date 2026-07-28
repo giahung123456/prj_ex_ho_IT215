@@ -51,4 +51,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM Product p ORDER BY p.stockQuantity ASC")
     List<Product> findLowestStockProducts(Pageable pageable);
+
+    @Query("SELECT p FROM Product p ORDER BY p.stockQuantity DESC")
+    List<Product> findHighestStockProducts(Pageable pageable);
 }

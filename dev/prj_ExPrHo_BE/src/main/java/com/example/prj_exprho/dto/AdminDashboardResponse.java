@@ -20,6 +20,7 @@ public class AdminDashboardResponse {
     private List<TopProductItem> topProducts;
     private List<OrderResponse> recentOrders;
     private List<ProductResponse> lowStockProducts;
+    private List<ProductResponse> highestStockProducts;
     private List<CategoryRevenueItem> categoryRevenue;
     private Long lowStockCount;
 

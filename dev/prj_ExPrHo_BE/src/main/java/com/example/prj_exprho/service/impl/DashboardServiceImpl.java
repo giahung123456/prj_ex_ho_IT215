@@ -146,6 +146,21 @@ public class DashboardServiceImpl implements DashboardService {
                         .build())
                 .collect(Collectors.toList());
 
+        // 4. Top 5 Highest Stock Products
+        List<Product> highestStockProdsList = productRepository.findHighestStockProducts(PageRequest.of(0, 5));
+        List<ProductResponse> highestStockProducts = highestStockProdsList.stream()
+                .map(product -> ProductResponse.builder()
+                        .id(product.getId())
+                        .sku(product.getSku())
+                        .name(product.getName())
+                        .price(product.getPrice())
+                        .costPrice(product.getCostPrice())
+                        .stockQuantity(product.getStockQuantity())
+                        .status(product.getStatus())
+                        .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
+                        .build())
+                .collect(Collectors.toList());
+
         return AdminDashboardResponse.builder()
                 .totalRevenue(totalRevenue)
                 .ordersCount(totalOrders)
@@ -156,6 +171,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .topProducts(topProducts)
                 .recentOrders(recentOrders)
                 .lowStockProducts(lowStockProducts)
+                .highestStockProducts(highestStockProducts)
                 .categoryRevenue(categoryRevenue)
                 .lowStockCount(lowStockCount)
                 .build();
@@ -256,18 +272,20 @@ public class DashboardServiceImpl implements DashboardService {
             totalOrders += count;
         }
 
-        // Top 5 Lowest Stock Products (Low stock alerts)
-        List<Product> lowStockProdsList = productRepository.findLowestStockProducts(PageRequest.of(0, 5));
-        List<ProductResponse> lowStockProducts = lowStockProdsList.stream()
-                .map(product -> ProductResponse.builder()
-                        .id(product.getId())
-                        .sku(product.getSku())
-                        .name(product.getName())
-                        .price(product.getPrice())
-                        .costPrice(null) // Security constraint: Sales role cannot view cost price
-                        .stockQuantity(product.getStockQuantity())
-                        .status(product.getStatus())
-                        .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
+        // Top 5 Highest Priced Orders
+        List<Order> highestPricedOrdersList = orderRepository.findHighestPricedOrdersFrom(startDate, PageRequest.of(0, 5));
+        List<OrderResponse> highestPricedOrders = highestPricedOrdersList.stream()
+                .map(order -> OrderResponse.builder()
+                        .id(order.getId())
+                        .orderCode(order.getOrderCode())
+                        .totalAmount(order.getTotalAmount())
+                        .status(order.getStatus())
+                        .shippingAddress(order.getShippingAddress())
+                        .shippingPhone(order.getShippingPhone())
+                        .createdAt(order.getCreatedAt())
+                        .updatedAt(order.getUpdatedAt())
+                        .salesUsername(order.getSales() != null ? order.getSales().getUsername() : null)
+                        .username(order.getCustomer() != null ? order.getCustomer().getUsername() : null)
                         .build())
                 .collect(Collectors.toList());
 
@@ -287,7 +305,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .totalRevenue(totalRevenue)
                 .ordersCount(totalOrders)
                 .ordersByStatus(ordersByStatus)
-                .lowStockProducts(lowStockProducts)
+                .highestPricedOrders(highestPricedOrders)
                 .topProducts(topProducts)
                 .build();
     }

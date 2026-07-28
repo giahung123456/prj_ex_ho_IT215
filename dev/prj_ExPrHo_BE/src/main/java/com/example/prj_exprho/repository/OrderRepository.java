@@ -60,6 +60,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findTop5ByOrderByCreatedAtDesc();
 
+    @Query("SELECT o FROM Order o WHERE o.status = 'COMPLETED' AND o.createdAt >= :startDate ORDER BY o.totalAmount DESC")
+    List<Order> findHighestPricedOrdersFrom(@Param("startDate") java.time.LocalDateTime startDate, org.springframework.data.domain.Pageable pageable);
+
     @Query("SELECT c.name, SUM(oi.quantity * oi.price) " +
            "FROM OrderItem oi " +
            "JOIN oi.order o " +
