@@ -21,6 +21,7 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [qtyInputs, setQtyInputs] = useState({});
 
   const loadCart = async () => {
     setLoading(true);
@@ -46,6 +47,50 @@ const Cart = () => {
       handleRemoveItem(itemId);
       return;
     }
+
+    setQtyInputs(prev => {
+      const copy = { ...prev };
+      delete copy[itemId];
+      return copy;
+    });
+
+    setIsUpdating(true);
+    try {
+      const updatedCart = await cartService.updateQuantity(itemId, { quantity: newQty });
+      setCart(updatedCart);
+      window.dispatchEvent(new Event('cart-updated'));
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || 'Không thể cập nhật số lượng.';
+      showToast('Lỗi cập nhật', msg, 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleInputChange = (itemId, val) => {
+    const cleaned = val.replace(/\D/g, '');
+    setQtyInputs(prev => ({
+      ...prev,
+      [itemId]: cleaned
+    }));
+  };
+
+  const handleQtySubmit = async (itemId, currentQty, inputVal) => {
+    if (inputVal === undefined) return;
+    let newQty = parseInt(inputVal, 10);
+    
+    if (isNaN(newQty) || newQty <= 0) {
+      newQty = currentQty;
+    }
+    
+    setQtyInputs(prev => {
+      const copy = { ...prev };
+      delete copy[itemId];
+      return copy;
+    });
+
+    if (newQty === currentQty) return;
 
     setIsUpdating(true);
     try {
@@ -190,8 +235,16 @@ const Cart = () => {
                               <input 
                                 type="text" 
                                 className="cart-qty-input" 
-                                value={item.quantity} 
-                                readOnly 
+                                value={qtyInputs[item.id] !== undefined ? qtyInputs[item.id] : item.quantity} 
+                                onChange={(e) => handleInputChange(item.id, e.target.value)}
+                                onBlur={() => handleQtySubmit(item.id, item.quantity, qtyInputs[item.id])}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleQtySubmit(item.id, item.quantity, qtyInputs[item.id]);
+                                    e.target.blur();
+                                  }
+                                }}
+                                disabled={isUpdating}
                               />
                               <button 
                                 onClick={() => handleUpdateQuantity(item.id, item.quantity, 1)}

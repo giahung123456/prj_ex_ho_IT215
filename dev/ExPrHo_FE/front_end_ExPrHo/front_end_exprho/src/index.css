@@ -1519,6 +1519,10 @@ select.form-input {
   font-size: 0.85rem;
 }
 
+.cart-qty-input:focus {
+  outline: none;
+}
+
 .cart-item-info {
   display: flex;
   align-items: center;

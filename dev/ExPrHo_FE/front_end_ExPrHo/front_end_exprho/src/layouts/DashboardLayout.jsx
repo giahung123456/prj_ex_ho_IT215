@@ -128,7 +128,7 @@ const DashboardLayout = () => {
           <div className="ecom-navbar">
             <Link to="/" className="ecom-brand">
               <ShoppingCart size={24} />
-              <span>GigaStore</span>
+              <span>ShihoStore</span>
             </Link>
 
             <ul className="ecom-nav-menu">
@@ -193,7 +193,7 @@ const DashboardLayout = () => {
         </main>
 
         <footer className="ecom-footer">
-          <p>© 2026 GigaStore. Hệ Thống Quản Lý Bán Hàng Dự Án IT215. Thiết kế cao cấp.</p>
+          <p>© 2026 ShihoStore. Hệ Thống Quản Lý Bán Hàng Dự Án IT215. Thiết kế cao cấp.</p>
         </footer>
       </div>
     );

@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 680" width="100%" height="100%">
+  <!-- Background -->
+  <rect width="800" height="680" fill="#f8fafc" rx="12"/>
+  
+  <!-- System Boundary -->
+  <rect x="250" y="30" width="300" height="620" fill="#ffffff" stroke="#64748b" stroke-width="2" rx="8"/>
+  <text x="400" y="52" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="bold" fill="#475569">Hệ Thống Quản Lý Sản Phẩm &amp; Bán Hàng</text>
+
+  <!-- Actors -->
+  <!-- Admin -->
+  <circle cx="80" cy="140" r="15" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <line x1="80" y1="155" x2="80" y2="195" stroke="#475569" stroke-width="2"/>
+  <line x1="60" y1="165" x2="100" y2="165" stroke="#475569" stroke-width="2"/>
+  <line x1="80" y1="195" x2="65" y2="225" stroke="#475569" stroke-width="2"/>
+  <line x1="80" y1="195" x2="95" y2="225" stroke="#475569" stroke-width="2"/>
+  <text x="80" y="245" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Admin</text>
+
+  <!-- Storekeeper -->
+  <circle cx="80" cy="330" r="15" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <line x1="80" y1="345" x2="80" y2="385" stroke="#475569" stroke-width="2"/>
+  <line x1="60" y1="355" x2="100" y2="355" stroke="#475569" stroke-width="2"/>
+  <line x1="80" y1="385" x2="65" y2="415" stroke="#475569" stroke-width="2"/>
+  <line x1="80" y1="385" x2="95" y2="415" stroke="#475569" stroke-width="2"/>
+  <text x="80" y="435" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Thủ kho</text>
+
+  <!-- Sales -->
+  <circle cx="80" cy="520" r="15" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <line x1="80" y1="535" x2="80" y2="575" stroke="#475569" stroke-width="2"/>
+  <line x1="60" y1="545" x2="100" y2="545" stroke="#475569" stroke-width="2"/>
+  <line x1="80" y1="575" x2="65" y2="605" stroke="#475569" stroke-width="2"/>
+  <line x1="80" y1="575" x2="95" y2="605" stroke="#475569" stroke-width="2"/>
+  <text x="80" y="625" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Bán hàng (Sales)</text>
+
+  <!-- Customer -->
+  <circle cx="720" cy="330" r="15" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <line x1="720" y1="345" x2="720" y2="385" stroke="#475569" stroke-width="2"/>
+  <line x1="700" y1="355" x2="740" y2="355" stroke="#475569" stroke-width="2"/>
+  <line x1="720" y1="385" x2="705" y2="415" stroke="#475569" stroke-width="2"/>
+  <line x1="720" y1="385" x2="735" y2="415" stroke="#475569" stroke-width="2"/>
+  <text x="720" y="435" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="bold" fill="#1e293b">Khách hàng</text>
+
+  <!-- Use Cases -->
+  <!-- UC01 -->
+  <ellipse cx="400" cy="80" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="84" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC01: Đăng nhập &amp; Đăng xuất</text>
+
+  <!-- UC04 -->
+  <ellipse cx="400" cy="135" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="139" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC04: Quản lý nhân viên</text>
+
+  <!-- UC05 -->
+  <ellipse cx="400" cy="190" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="194" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC05: Quản lý danh mục</text>
+
+  <!-- UC10 -->
+  <ellipse cx="400" cy="245" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="249" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC10: Quản lý khách hàng</text>
+
+  <!-- UC07 -->
+  <ellipse cx="400" cy="300" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="304" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC07: Thêm &amp; Sửa sản phẩm</text>
+
+  <!-- UC08 -->
+  <ellipse cx="400" cy="355" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="359" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC08: Điều chỉnh tồn kho</text>
+
+  <!-- UC09 -->
+  <ellipse cx="400" cy="410" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="414" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC09: Xem lịch sử kho</text>
+
+  <!-- UC06 -->
+  <ellipse cx="400" cy="465" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="469" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC06: Xem danh sách sản phẩm</text>
+
+  <!-- UC12 -->
+  <ellipse cx="400" cy="520" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="524" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC12: Quản lý giỏ hàng</text>
+
+  <!-- UC13 -->
+  <ellipse cx="400" cy="575" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="579" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC13: Đặt hàng &amp; Mua sản phẩm</text>
+
+  <!-- UC15 -->
+  <ellipse cx="400" cy="630" rx="110" ry="18" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="400" y="634" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#1e3a8a">UC15: Thống kê &amp; Báo cáo</text>
+
+  <!-- Relations -->
+  <!-- Admin Relations -->
+  <line x1="95" y1="165" x2="290" y2="80" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="165" x2="290" y2="135" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="165" x2="290" y2="190" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="165" x2="290" y2="245" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="165" x2="290" y2="630" stroke="#94a3b8" stroke-width="1.2"/>
+
+  <!-- Storekeeper Relations -->
+  <line x1="95" y1="355" x2="290" y2="80" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="355" x2="290" y2="300" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="355" x2="290" y2="355" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="355" x2="290" y2="410" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="355" x2="290" y2="630" stroke="#94a3b8" stroke-width="1.2"/>
+
+  <!-- Sales Relations -->
+  <line x1="95" y1="545" x2="290" y2="80" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="545" x2="290" y2="465" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="545" x2="290" y2="575" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="95" y1="545" x2="290" y2="630" stroke="#94a3b8" stroke-width="1.2"/>
+
+  <!-- Customer Relations -->
+  <line x1="705" y1="355" x2="510" y2="80" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="705" y1="355" x2="510" y2="465" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="705" y1="355" x2="510" y2="520" stroke="#94a3b8" stroke-width="1.2"/>
+  <line x1="705" y1="355" x2="510" y2="575" stroke="#94a3b8" stroke-width="1.2"/>
+</svg>

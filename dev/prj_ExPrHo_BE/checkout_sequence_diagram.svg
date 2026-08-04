@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+  <!-- Background -->
+  <rect width="800" height="480" fill="#f8fafc" rx="12"/>
+
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="bold" fill="#1e293b">Sơ đồ tuần tự: Luồng xử lý giao dịch đặt hàng (Checkout Transaction)</text>
+
+  <!-- Lifelines -->
+  <!-- Khách hàng -->
+  <line x1="120" y1="80" x2="120" y2="430" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="50" y="55" width="140" height="30" fill="#f1f5f9" stroke="#475569" stroke-width="1.5" rx="4"/>
+  <text x="120" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="bold" fill="#1e293b">Khách hàng</text>
+
+  <!-- React Client -->
+  <line x1="320" y1="80" x2="320" y2="430" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="250" y="55" width="140" height="30" fill="#f1f5f9" stroke="#475569" stroke-width="1.5" rx="4"/>
+  <text x="320" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="bold" fill="#1e293b">React Client</text>
+
+  <!-- Spring Boot API -->
+  <line x1="520" y1="80" x2="520" y2="430" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="450" y="55" width="140" height="30" fill="#f1f5f9" stroke="#475569" stroke-width="1.5" rx="4"/>
+  <text x="520" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="bold" fill="#1e293b">Spring Boot API</text>
+
+  <!-- MySQL DB -->
+  <line x1="720" y1="80" x2="720" y2="430" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="650" y="55" width="140" height="30" fill="#f1f5f9" stroke="#475569" stroke-width="1.5" rx="4"/>
+  <text x="720" y="74" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="bold" fill="#1e293b">MySQL DB</text>
+
+  <!-- Activation bars -->
+  <rect x="115" y="100" width="10" height="310" fill="#cbd5e1" stroke="#475569" stroke-width="1"/>
+  <rect x="315" y="100" width="10" height="310" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <rect x="515" y="125" width="10" height="260" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <rect x="715" y="145" width="10" height="205" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+
+  <!-- Messages -->
+  <!-- 1. Click đặt hàng -->
+  <line x1="125" y1="110" x2="315" y2="110" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="220" y="104" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#1e3a8a">1. Nhập thông tin &amp; Click Xác nhận</text>
+
+  <!-- 2. POST /checkout -->
+  <line x1="325" y1="135" x2="515" y2="135" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="420" y="129" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#1e3a8a">2. POST /api/v1/orders/checkout</text>
+
+  <!-- Transaction start block -->
+  <rect x="470" y="148" width="270" height="180" fill="none" stroke="#e11d48" stroke-width="1.2" stroke-dasharray="3"/>
+  <text x="480" y="162" font-family="Inter, sans-serif" font-size="9" font-weight="bold" fill="#be123c">START TRANSACTION</text>
+
+  <!-- 3. Lock & Select -->
+  <line x1="525" y1="180" x2="715" y2="180" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="620" y="174" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#1e3a8a">3. Lock &amp; Query Stock (SELECT FOR UPDATE)</text>
+
+  <!-- 4. Stock response -->
+  <line x1="715" y1="210" x2="525" y2="210" stroke="#3b82f6" stroke-width="1.2" stroke-dasharray="3" marker-end="url(#arrow)"/>
+  <text x="620" y="204" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#1e3a8a">4. Trả về thông tin tồn kho</text>
+
+  <!-- 5. Validate & Update DB -->
+  <line x1="525" y1="245" x2="715" y2="245" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="620" y="239" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#1e3a8a">5. Cập nhật Stock, Tạo Order &amp; Stock Log</text>
+
+  <!-- 6. Delete Cart items -->
+  <line x1="525" y1="275" x2="715" y2="275" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="620" y="269" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#1e3a8a">6. Xóa các sản phẩm trong giỏ hàng</text>
+
+  <!-- 7. Commit Response -->
+  <line x1="715" y1="315" x2="525" y2="315" stroke="#10b981" stroke-width="1.2" stroke-dasharray="3" marker-end="url(#arrow)"/>
+  <text x="620" y="309" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#065f46">7. Commit Transaction thành công</text>
+
+  <!-- 8. Success Response -->
+  <line x1="515" y1="350" x2="325" y2="350" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="420" y="344" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#065f46">8. 200 OK (Đặt hàng thành công)</text>
+
+  <!-- 9. Show toast success -->
+  <line x1="315" y1="390" x2="125" y2="390" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="220" y="384" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#065f46">9. Hiển thị thông báo đặt hàng thành công</text>
+
+  <!-- Defs -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3b82f6"/>
+    </marker>
+  </defs>
+</svg>

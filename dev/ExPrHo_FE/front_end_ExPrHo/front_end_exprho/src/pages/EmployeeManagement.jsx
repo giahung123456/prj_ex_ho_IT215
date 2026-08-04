@@ -66,6 +66,10 @@ const EmployeeManagement = () => {
   const [tempCredentials, setTempCredentials] = useState(null);
   const [copied, setCopied] = useState(false);
 
+  // Custom Status Toggle Confirm state
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [employeeToToggle, setEmployeeToToggle] = useState(null);
+
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
     try {
@@ -188,18 +192,29 @@ const EmployeeManagement = () => {
     }
   };
 
-  const handleToggleStatus = async (emp) => {
+  const handleToggleStatus = (emp) => {
+    setEmployeeToToggle(emp);
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirmToggleStatus = async () => {
+    if (!employeeToToggle) return;
+    setIsSubmitting(true);
     try {
-      const res = await employeeService.toggleStatus(emp.id, emp.status);
+      const res = await employeeService.toggleStatus(employeeToToggle.id, employeeToToggle.status);
       showToast(
         'Đã thay đổi trạng thái', 
-        `Nhân viên ${emp.username} hiện đang ở trạng thái: ${res.status}`, 
+        `Nhân viên ${employeeToToggle.username} hiện đang ở trạng thái: ${res.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm khóa'}`, 
         'success'
       );
+      setConfirmModalOpen(false);
+      setEmployeeToToggle(null);
       fetchEmployees();
     } catch (err) {
       console.error(err);
       showToast('Lỗi hệ thống', 'Không thể thay đổi trạng thái tài khoản.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -518,6 +533,88 @@ const EmployeeManagement = () => {
                   </button>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM CONFIRM TOGGLE STATUS MODAL */}
+      {confirmModalOpen && employeeToToggle && (
+        <div className="modal-backdrop" style={{ zIndex: 1100 }}>
+          <div className="modal-card" style={{ maxWidth: '420px' }}>
+            <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
+              <span className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: employeeToToggle.status === 'ACTIVE' ? 'var(--error)' : 'var(--success)' }}>
+                {employeeToToggle.status === 'ACTIVE' ? (
+                  <>
+                    <Lock size={22} className="text-danger" />
+                    Xác Nhận Khóa Tài Khoản
+                  </>
+                ) : (
+                  <>
+                    <Unlock size={22} className="text-success" style={{ color: 'var(--success)' }} />
+                    Xác Nhận Mở Khóa Tài Khoản
+                  </>
+                )}
+              </span>
+              <button className="modal-close-btn" onClick={() => setConfirmModalOpen(false)} disabled={isSubmitting}>
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="modal-body" style={{ paddingTop: '1rem' }}>
+              <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', marginBottom: '1.75rem', lineHeight: 1.5 }}>
+                {employeeToToggle.status === 'ACTIVE' ? (
+                  <>
+                    Bạn có chắc chắn muốn khóa tài khoản của nhân viên <strong style={{ color: 'var(--error)' }}>"{employeeToToggle.full_name || employeeToToggle.username}"</strong> không? Nhân viên này sẽ không thể đăng nhập vào hệ thống.
+                  </>
+                ) : (
+                  <>
+                    Bạn có chắc chắn muốn mở khóa tài khoản của nhân viên <strong style={{ color: 'var(--success)' }}>"{employeeToToggle.full_name || employeeToToggle.username}"</strong> không? Nhân viên này sẽ có thể đăng nhập lại vào hệ thống.
+                  </>
+                )}
+              </p>
+              
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setConfirmModalOpen(false)}
+                  disabled={isSubmitting}
+                  style={{ width: 'auto' }}
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleConfirmToggleStatus}
+                  disabled={isSubmitting}
+                  style={{ 
+                    width: 'auto', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem', 
+                    backgroundColor: employeeToToggle.status === 'ACTIVE' ? 'var(--error)' : 'var(--success)', 
+                    border: 'none', 
+                    color: '#fff' 
+                  }}
+                >
+                  {isSubmitting ? (
+                    <div 
+                      style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        border: '2px solid rgba(255,255,255,0.3)', 
+                        borderTopColor: '#fff', 
+                        borderRadius: '50%', 
+                        animation: 'spin 1s linear infinite' 
+                      }} 
+                    />
+                  ) : (
+                    employeeToToggle.status === 'ACTIVE' ? 'Xác nhận khóa' : 'Xác nhận mở khóa'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
